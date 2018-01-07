@@ -1,0 +1,11 @@
+source https://www.nuget.org/api/v2
+storage: none
+
+clitool xunit.runner.console 2.3.1 
+nuget System.Threading.Tasks.Dataflow 4.8.0
+
+group Tests
+source https://www.nuget.org/api/v2
+storage: none
+nuget FluentAssertions 5.0.0-beta0004 beta
+nuget xunit 2.3.1 
