@@ -1,16 +1,20 @@
-﻿namespace Kontur
+﻿using System.Collections.Generic;
+
+namespace Kontur
 {
     internal class Message<T> : IMessage
     {
-        private readonly string routeKey;
         private readonly T payload;
 
-        public Message(string routeKey, T payload)
+        public Message(string routeKey, T payload, IDictionary<string, string> headers)
         {
-            this.routeKey = routeKey;
+            this.RouteKey = routeKey;
             this.payload = payload;
+            this.Headers = headers;
         }
 
-        public string RouteKey => routeKey;
+        public string RouteKey { get; }
+
+        public IDictionary<string, string> Headers { get; }
     }
 }
