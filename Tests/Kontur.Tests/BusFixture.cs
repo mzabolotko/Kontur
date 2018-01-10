@@ -1,24 +1,25 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using System;
 using System.Threading;
-using Xunit;
+using NUnit.Framework;
 
 namespace Kontur.Tests
 {
-    public class BusFixture
+    [TestFixture]
+    internal class BusFixture
     {
-        [Fact(DisplayName = "Can emit a message to the empty bus")]
+        [Test(Description = "Can emit a message to the empty bus")]
         public void CanEmitToEmptyBus()
         {
             var sut = new Bus();
 
-            ((Action)(async () => await sut.EmitAsync<object>("test", new object())))
-                .Should().NotThrow(because:"the empty bus will purge emitted messages without subscribers");
+            ((Action)(async () => await sut.EmitAsync("test", new object())))
+                .Should().NotThrow(because: "the empty bus will purge emitted messages without subscribers");
 
-            sut.InboxMessageCount.Should().Be(0, because:"the empty bus will purge emitted messages without subscribers");
+            sut.InboxMessageCount.Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
         }
 
-        [Fact(DisplayName = "Can emit a message to the single subscriber")]
+        [Test(Description = "Can emit a message to the single subscriber")]
         public void CanEmitToSingleSubscriber()
         {
             const string CommandDoSomething = "command.do.something";
@@ -29,10 +30,10 @@ namespace Kontur.Tests
             sut.Subscribe(CommandDoSomething, message => { manualEvent.Set(); });
             sut.EmitAsync(CommandDoSomething, new object()).Wait();
 
-            manualEvent.Wait(10).Should().BeTrue(because:"if the bus emits a message then the subscriber should be called");
+            manualEvent.Wait(10).Should().BeTrue(because: "if the bus emits a message then the subscriber should be called");
         }
 
-        [Fact(DisplayName = "Can emit a message to multiple subscribers")]
+        [Test(Description = "Can emit a message to multiple subscribers")]
         public void CanEmitToMultipleSubscribers()
         {
             const string CommandDoSomething = "command.do.something";
@@ -47,17 +48,17 @@ namespace Kontur.Tests
             count.Wait(10).Should().BeTrue("if the bus emits a message then all subscribers should be called");
         }
 
-        [Fact(DisplayName = "Can subscribe the bus")]
+        [Test(Description = "Can subscribe the bus")]
         public void CanSubscribe()
         {
             const string CommandDoSomething = "command.do.something";
 
             var sut = new Bus();
             ISubscriptionTag tag = sut.Subscribe(CommandDoSomething, message => { });
-            sut.IsSubscribed(tag).Should().BeTrue(because:"the bus creates the subscription");
+            sut.IsSubscribed(tag).Should().BeTrue(because: "the bus creates the subscription");
         }
 
-        [Fact(DisplayName = "Can unsubscribe from the bus")]
+        [Test(Description = "Can unsubscribe from the bus")]
         public void CanUnsubscribe()
         {
             const string CommandDoSomething = "command.do.something";

@@ -5,7 +5,6 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Kontur
 {
-
     public class Bus
     {
         private readonly BufferBlock<IMessage> inbox = new BufferBlock<IMessage>();

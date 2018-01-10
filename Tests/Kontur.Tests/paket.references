@@ -1,3 +1,4 @@
 ﻿group Tests
-xunit
+NUnit
+NUnit3TestAdapter
 FluentAssertions
