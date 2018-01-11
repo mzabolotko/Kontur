@@ -6,7 +6,7 @@ namespace Kontur
     {
         private readonly T payload;
 
-        public Message(string routeKey, T payload, IDictionary<string, string> headers)
+        public Message(string routeKey, T payload, IReadOnlyDictionary<string, string> headers)
         {
             this.RouteKey = routeKey;
             this.payload = payload;
@@ -15,6 +15,6 @@ namespace Kontur
 
         public string RouteKey { get; }
 
-        public IDictionary<string, string> Headers { get; }
+        public IReadOnlyDictionary<string, string> Headers { get; }
     }
 }

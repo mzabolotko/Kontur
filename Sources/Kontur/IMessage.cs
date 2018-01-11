@@ -6,6 +6,6 @@ namespace Kontur
     {
         string RouteKey { get; }
 
-        IDictionary<string, string> Headers { get; }
+        IReadOnlyDictionary<string, string> Headers { get; }
     }
 }
