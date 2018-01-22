@@ -13,7 +13,7 @@ namespace Kontur.Tests
         {
             var sut = new Bus();
 
-            ((Action)(async () => await sut.EmitAsync("test", new object())))
+            ((Action)(async () => await sut.EmitAsync("test", new object(), null)))
                 .Should().NotThrow(because: "the empty bus will purge emitted messages without subscribers");
 
             sut.InboxMessageCount.Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
@@ -28,7 +28,7 @@ namespace Kontur.Tests
             var sut = new Bus();
 
             sut.Subscribe(CommandDoSomething, message => { manualEvent.Set(); });
-            sut.EmitAsync(CommandDoSomething, new object()).Wait();
+            sut.EmitAsync(CommandDoSomething, new object(), null).Wait();
 
             manualEvent.Wait(10).Should().BeTrue(because: "if the bus emits a message then the subscriber should be called");
         }
@@ -43,7 +43,7 @@ namespace Kontur.Tests
 
             sut.Subscribe(CommandDoSomething, message => { count.Signal(); });
             sut.Subscribe(CommandDoSomething, message => { count.Signal(); });
-            sut.EmitAsync(CommandDoSomething, new object()).Wait();
+            sut.EmitAsync(CommandDoSomething, new object(), null).Wait();
 
             count.Wait(10).Should().BeTrue("if the bus emits a message then all subscribers should be called");
         }
