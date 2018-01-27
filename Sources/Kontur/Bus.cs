@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -30,9 +31,9 @@ namespace Kontur
             return new SubscriptionTag(subsriptionId, link);
         }
 
-        public async Task<bool> EmitAsync<T>(string routeKey, T payload)
+        public async Task<bool> EmitAsync<T>(string routeKey, T payload, IDictionary<string, string> headers)
         {
-            return await this.inbox.SendAsync(new Message<T>(routeKey, payload));
+            return await this.inbox.SendAsync(new Message<T>(routeKey, payload, headers));
         }
 
         public int InboxMessageCount => this.inbox.Count;
