@@ -6,11 +6,11 @@ namespace Kontur
     {
         private readonly T payload;
 
-        public Message(string routeKey, T payload, IReadOnlyDictionary<string, string> headers)
+        public Message(string routeKey, T payload, IDictionary<string, string> headers)
         {
             this.RouteKey = routeKey;
             this.payload = payload;
-            this.Headers = headers;
+            this.Headers = (IReadOnlyDictionary<string, string>)headers;
         }
 
         public string RouteKey { get; }
