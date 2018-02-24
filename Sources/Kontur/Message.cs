@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Kontur
 {
@@ -6,14 +7,14 @@ namespace Kontur
     {
         private readonly T payload;
 
-        public Message(string routeKey, T payload, IDictionary<string, string> headers)
+        public Message(T payload, IDictionary<string, string> headers)
         {
-            this.RouteKey = routeKey;
+            this.RouteKey = typeof(T);
             this.payload = payload;
-            this.Headers = (IReadOnlyDictionary<string, string>)headers;
+            this.Headers = (IReadOnlyDictionary<string, string>) headers;
         }
 
-        public string RouteKey { get; }
+        public Type RouteKey { get; }
 
         public IReadOnlyDictionary<string, string> Headers { get; }
     }
