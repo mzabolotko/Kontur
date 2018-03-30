@@ -8,5 +8,7 @@ namespace Kontur
         Type RouteKey { get; }
 
         IReadOnlyDictionary<string, string> Headers { get; }
+
+        object Payload { get; }
     }
 }

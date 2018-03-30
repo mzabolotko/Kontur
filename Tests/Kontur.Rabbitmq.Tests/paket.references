@@ -1,5 +1,7 @@
-﻿group Tests
+﻿group RabbitMqTests
+    RabbitMQ.Client
     Microsoft.NET.Test.Sdk
     NUnit
     NUnit3TestAdapter
     FluentAssertions
+    FakeItEasy
