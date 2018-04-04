@@ -17,23 +17,23 @@ namespace Kontur
             this.inbox.LinkTo(dispatcher);
         }
 
-        public ISubscriptionTag Subscribe(string routeKey, Action<IMessage> subscriber)
+        public ISubscriptionTag Subscribe<T>(Action<IMessage> subscriber)
         {
             BufferBlock<IMessage> workerQueue = new BufferBlock<IMessage>();
             ActionBlock<IMessage> worker = new ActionBlock<IMessage>(subscriber);
 
             workerQueue.LinkTo(worker);
 
-            IDisposable link = this.dispatcher.LinkTo(workerQueue, message => routeKey == message.RouteKey);
+            IDisposable link = this.dispatcher.LinkTo(workerQueue, message => typeof(T) == message.RouteKey);
             Guid subsriptionId = Guid.NewGuid();
             link = subscribers.AddOrUpdate(subsriptionId, link, (o, n) => n);
 
             return new SubscriptionTag(subsriptionId, link);
         }
 
-        public async Task<bool> EmitAsync<T>(string routeKey, T payload, IDictionary<string, string> headers)
+        public async Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
         {
-            return await this.inbox.SendAsync(new Message<T>(routeKey, payload, headers));
+            return await this.inbox.SendAsync(new Message<T>(payload, headers));
         }
 
         public int InboxMessageCount => this.inbox.Count;
