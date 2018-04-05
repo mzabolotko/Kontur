@@ -1,5 +1,4 @@
-﻿
-namespace Kontur.Rabbitmq
+﻿namespace Kontur.Rabbitmq
 {
     internal class AmqpMessageBuilder
     {

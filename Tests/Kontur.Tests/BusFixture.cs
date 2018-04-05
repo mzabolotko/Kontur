@@ -13,8 +13,7 @@ namespace Kontur.Tests
         {
             var sut = new Bus();
 
-            ((Action)(async () => await sut.EmitAsync<object>(new object(), null)))
-                .Should().NotThrow(because: "the empty bus will purge emitted messages without subscribers");
+            Assert.DoesNotThrowAsync((async () => await sut.EmitAsync<object>(new object(), null)), "the empty bus will purge emitted messages without subscribers");
 
             sut.InboxMessageCount.Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
         }

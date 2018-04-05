@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using RabbitMQ.Client;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Kontur.Rabbitmq.IntegrationTests
 {
@@ -19,8 +20,9 @@ namespace Kontur.Rabbitmq.IntegrationTests
                 return cfg;
             }))
             {
-                sut.EmitAsync("hello, world!", new Dictionary<string, string> { { "content-type", "text/plain" } }).Wait();
-                System.Threading.Thread.Sleep(50000);
+                Assert.DoesNotThrowAsync(
+                    () => sut.EmitAsync("hello, world!", new Dictionary<string, string> { { "content-type", "text/plain" } }),
+                    "Message should be pulished");
             }
         }
     }
