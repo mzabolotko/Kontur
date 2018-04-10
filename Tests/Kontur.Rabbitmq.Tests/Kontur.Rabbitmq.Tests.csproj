@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Sources\Kontur\Kontur.csproj" />
+    <ProjectReference Include="..\..\Sources\Kontur.Rabbitmq\Kontur.Rabbitmq.csproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

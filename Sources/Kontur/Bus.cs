@@ -19,10 +19,15 @@ namespace Kontur
 
         public ISubscriptionTag Subscribe<T>(Action<IMessage> subscriber)
         {
-            BufferBlock<IMessage> workerQueue = new BufferBlock<IMessage>();
             ActionBlock<IMessage> worker = new ActionBlock<IMessage>(subscriber);
 
-            workerQueue.LinkTo(worker);
+            return Subscribe<T>(worker);
+        }
+
+        public ISubscriptionTag Subscribe<T>(ITargetBlock<IMessage> subscriber)
+        {
+            BufferBlock<IMessage> workerQueue = new BufferBlock<IMessage>();
+            workerQueue.LinkTo(subscriber);
 
             IDisposable link = this.dispatcher.LinkTo(workerQueue, message => typeof(T) == message.RouteKey);
             Guid subsriptionId = Guid.NewGuid();
