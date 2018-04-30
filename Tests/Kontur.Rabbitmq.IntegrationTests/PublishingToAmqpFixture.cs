@@ -1,7 +1,5 @@
 ﻿using NUnit.Framework;
-using RabbitMQ.Client;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Kontur.Rabbitmq.IntegrationTests
 {
@@ -13,7 +11,7 @@ namespace Kontur.Rabbitmq.IntegrationTests
         {
             var sut = new Bus();
 
-            using (var subsciption = sut.WithRabbitMq<string>(cfg => 
+            using (var subsciption = sut.ToRabbitMq(cfg => 
             {
                 cfg.RouteTo<string>("test", string.Empty);
 

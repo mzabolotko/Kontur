@@ -18,7 +18,7 @@
 
         public AmqpMessage Build(IMessage message)
         {
-            IAmqpProperties properties = this.propertyBuilder.Build(message);
+            IAmqpProperties properties = this.propertyBuilder.BuildPropertiesFromHeaders(message.Headers);
             string exchangeName = this.router.GetExchange(message);
             string routingKey = this.router.GetRoutingKey(message);
 
@@ -31,6 +31,6 @@
                 routingKey,
                 payload);
         }
-    }
 
+    }
 }

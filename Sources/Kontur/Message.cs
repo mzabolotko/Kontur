@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Kontur
 {
-    internal class Message<T> : IMessage
+    public class Message<T> : IMessage
     {
         private readonly T payload;
 
@@ -18,6 +18,8 @@ namespace Kontur
 
         public IReadOnlyDictionary<string, string> Headers { get; }
 
-        public object Payload => this.payload;
+        object IMessage.Payload => this.payload;
+
+        public T Payload => this.payload;
     }
 }

@@ -4,7 +4,7 @@ namespace Kontur.Rabbitmq
 {
     //TODO: support mandatory publish
 
-    internal class AmqpMessage
+    public class AmqpMessage
     {
         public AmqpMessage(
             IAmqpProperties properties, 
