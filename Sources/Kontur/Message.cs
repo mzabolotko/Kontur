@@ -17,5 +17,7 @@ namespace Kontur
         public Type RouteKey { get; }
 
         public IReadOnlyDictionary<string, string> Headers { get; }
+
+        public object Payload => this.payload;
     }
 }
