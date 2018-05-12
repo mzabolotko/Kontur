@@ -4,6 +4,7 @@ using System.Threading;
 using NUnit.Framework;
 using FakeItEasy;
 using System.Threading.Tasks.Dataflow;
+using System.Collections.Generic;
 
 namespace Kontur.Tests
 {
@@ -17,7 +18,7 @@ namespace Kontur.Tests
 
             Assert.DoesNotThrowAsync((async () => await sut.EmitAsync<object>(new object(), null)), "the empty bus will purge emitted messages without subscribers");
 
-            sut.InboxMessageCount.Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
+            sut.GetInboxMessageCount<object>().Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
         }
 
         [Test(Description = "Can emit a message to the single subscriber")]
@@ -81,9 +82,51 @@ namespace Kontur.Tests
             IPublisher publisher = A.Fake<IPublisher>();
             var sut = new Bus();
 
-            IPublishingTag tag = sut.RegisterPublisher(publisher);
+            IPublishingTag tag = sut.RegisterPublisher<int>(publisher);
             tag.Should().NotBeNull();
             A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).MustHaveHappenedOnceExactly();
+        }
+
+        [Test(Description = "Can check is publisher registered.")]
+        public void CanCheckIsRegistered()
+        {
+            IPublishingTag publishingTag = A.Fake<IPublishingTag>();
+            IPublisher publisher = A.Fake<IPublisher>();
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).Returns(publishingTag);
+
+            var sut = new Bus();
+            IPublishingTag tag = sut.RegisterPublisher<int>(publisher);
+
+            sut.IsRegistered(tag).Should().BeTrue();
+        }
+
+        [Test(Description = "Can unregister regestered publisher.")]
+        public void CanUnregister()
+        {
+            IPublishingTag publishingTag = A.Fake<IPublishingTag>();
+            IPublisher publisher = A.Fake<IPublisher>();
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).Returns(publishingTag);
+
+            var sut = new Bus();
+            IPublishingTag tag = sut.RegisterPublisher<int>(publisher);
+
+            sut.IsRegistered(tag).Should().BeTrue();
+            sut.Unregister(tag);
+            sut.IsRegistered(tag).Should().BeFalse();
+        }
+
+        [Test(Description = "Can continue to process messages after exception in the subscriber.")]
+        public void CanGetInboxMessageCountOfNotsubscribedType()
+        {
+            const int Capacity = 10;
+            var sut = new Bus();
+
+            for (var i = 0; i < Capacity * Capacity; i++)
+            {
+                sut.EmitAsync("hello", new Dictionary<string, string>()).Wait();
+            }
+
+            sut.GetInboxMessageCount<string>().Should().Be(0);
         }
     }
 

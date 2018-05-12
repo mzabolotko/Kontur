@@ -21,7 +21,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kontur.Rabbitmq", "Sources\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kontur.Rabbitmq.Tests", "Tests\Kontur.Rabbitmq.Tests\Kontur.Rabbitmq.Tests.csproj", "{68E20730-598D-4ED8-9C6E-F099BE325653}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kontur.Rabbitmq.IntegrationTests", "Tests\Kontur.Rabbitmq.IntegrationTests\Kontur.Rabbitmq.IntegrationTests.csproj", "{B7886B1F-8577-4CB2-B927-824AE8013307}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kontur.Rabbitmq.IntegrationTests", "Tests\Kontur.Rabbitmq.IntegrationTests\Kontur.Rabbitmq.IntegrationTests.csproj", "{B7886B1F-8577-4CB2-B927-824AE8013307}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{7ECD42BF-85C6-4A67-916B-EA3DC66004AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner", "Samples\Runner\Runner.csproj", "{EDAF8A29-49CB-4512-B610-8172BB4C708C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +53,10 @@ Global
 		{B7886B1F-8577-4CB2-B927-824AE8013307}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7886B1F-8577-4CB2-B927-824AE8013307}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7886B1F-8577-4CB2-B927-824AE8013307}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDAF8A29-49CB-4512-B610-8172BB4C708C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDAF8A29-49CB-4512-B610-8172BB4C708C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDAF8A29-49CB-4512-B610-8172BB4C708C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDAF8A29-49CB-4512-B610-8172BB4C708C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +67,7 @@ Global
 		{4A3E026B-2224-43A0-9A12-0E86902288E0} = {F9CCBEB2-17E4-4F34-B573-5DD6BA7A5ACC}
 		{68E20730-598D-4ED8-9C6E-F099BE325653} = {BE0B3F8E-4BA7-4EA6-8D78-3634AB0D89E9}
 		{B7886B1F-8577-4CB2-B927-824AE8013307} = {BE0B3F8E-4BA7-4EA6-8D78-3634AB0D89E9}
+		{EDAF8A29-49CB-4512-B610-8172BB4C708C} = {7ECD42BF-85C6-4A67-916B-EA3DC66004AB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2B05A81D-7D27-469B-B63A-B57B8B76F992}
