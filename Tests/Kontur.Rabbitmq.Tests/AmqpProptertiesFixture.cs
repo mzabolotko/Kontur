@@ -19,7 +19,7 @@ namespace Kontur.Rabbitmq.Tests
             const bool Persistent = true;
             const string ReplyTo = "test";
             Dictionary<string, string> Headers = new Dictionary<string, string> { { "key1", "value1" }, { "key2", "value2" } };
-            AmqpProperties sut = new AmqpProperties
+            var sut = new AmqpProperties
             {
                 ContentType = ContentType,
                 ContentEncoding = ContentEncoding,

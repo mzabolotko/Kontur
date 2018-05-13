@@ -16,7 +16,7 @@ namespace Kontur.Rabbitmq
         public AmqpPublishingBuilder()
         {
             this.propertyBuilder = new AmqpPropertyBuilder();
-            this.connectionFactory = new AmqpConnectionFactory(new Uri("amqp://"));
+            this.connectionFactory = new AsyncAmqpConnectionFactory(new Uri("amqp://"));
             this.publishers = new List<Func<MessageBuilder, IAmqpConnectionFactory, IPublisher>>();
         }
 
@@ -28,7 +28,7 @@ namespace Kontur.Rabbitmq
         {
             this.publishers.Add(
                 (messageBuilder, connectionFactory) =>
-                    new AmqpBasicConsumer<T>(
+                    new AsyncAmqpBasicConsumer<T>(
                         this.connectionFactory,
                         this.propertyBuilder,
                         messageBuilder,
@@ -55,13 +55,13 @@ namespace Kontur.Rabbitmq
 
         public IPublishingTag Build(IPublisherRegistry registry)
         {
-            List<IPublishingTag> tags = 
+            List<IPublishingTag> tags =
                 this.publishers
                     .Select(createPublisher => createPublisher(this.messageBuilder, this.connectionFactory))
                     .Select(publisher => registry.RegisterPublisher(publisher))
                     .ToList();
 
-            IPublishingTag tag = new CompositePublishingTag(Guid.NewGuid().ToString(), tags);
+            var tag = new CompositePublishingTag(Guid.NewGuid().ToString(), tags);
 
             return tag;
         }

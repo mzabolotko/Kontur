@@ -23,17 +23,14 @@ namespace Kontur.Rabbitmq
             this.connection = this.connectionFactory.CreateConnection();
             this.model = this.connection.CreateModel();
 
-            TransformBlock<IMessage, AmqpMessage> amqpBuilderBlock =
-                new TransformBlock<IMessage, AmqpMessage>(
+            var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessage>(
                     (Func<IMessage, AmqpMessage>)amqpMessageBuilder.Build);
 
-            ActionBlock<AmqpMessage> amqpSenderBlock =
-                new ActionBlock<AmqpMessage>(
+            var amqpSenderBlock = new ActionBlock<AmqpMessage>(
                     (Action<AmqpMessage>)this.Send);
 
-            amqpBuilderBlock.LinkTo(amqpSenderBlock);
-
             this.link = source.LinkTo(amqpBuilderBlock);
+            amqpBuilderBlock.LinkTo(amqpSenderBlock);
 
             return new SubscribingTag(Guid.NewGuid().ToString(), this.CancelSending);
         }

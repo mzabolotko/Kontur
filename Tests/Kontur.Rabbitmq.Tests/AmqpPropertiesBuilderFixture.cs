@@ -13,7 +13,7 @@ namespace Kontur.Rabbitmq.Tests
         public void CanCreateEmptyAmqpProperties()
         {
             IMessage message = A.Fake<IMessage>();
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -28,7 +28,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers)
                 .Returns(new Dictionary<string, string> { { AmqpPropertyBuilder.ContentEncoding, headerValue } });
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -45,7 +45,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers)
                 .Returns(new Dictionary<string, string> { { AmqpPropertyBuilder.ContentType, headerValue } });
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -62,7 +62,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers)
                 .Returns(new Dictionary<string, string> { { AmqpPropertyBuilder.CorrelationId, headerValue } });
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -79,7 +79,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers)
                 .Returns(new Dictionary<string, string> { { AmqpPropertyBuilder.MessageId, headerValue } });
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -96,7 +96,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers)
                 .Returns(new Dictionary<string, string> { { AmqpPropertyBuilder.Persistent, headerValue } });
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -113,7 +113,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers)
                 .Returns(new Dictionary<string, string> { { AmqpPropertyBuilder.ReplyTo, headerValue } });
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -133,7 +133,7 @@ namespace Kontur.Rabbitmq.Tests
 
             A.CallTo(() => message.Headers).Returns(allHeaders);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromHeaders(message.Headers);
 
@@ -144,7 +144,7 @@ namespace Kontur.Rabbitmq.Tests
         public void CanCreateEmptyAmqpPropertiesFromBasicProperites()
         {
             IBasicProperties basicProperties = A.Fake<IBasicProperties>();
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -158,7 +158,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "utf-8";
             A.CallTo(() => basicProperties.ContentEncoding).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -174,7 +174,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "text/plain";
             A.CallTo(() => basicProperties.ContentType).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -190,7 +190,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "100500";
             A.CallTo(() => basicProperties.CorrelationId).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -206,7 +206,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "100500";
             A.CallTo(() => basicProperties.MessageId).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -222,7 +222,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "true";
             A.CallTo(() => basicProperties.Persistent).Returns(bool.Parse(headerValue));
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -238,7 +238,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "some address";
             A.CallTo(() => basicProperties.ReplyTo).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IAmqpProperties properties = sut.BuildPropertiesFromProperties(basicProperties);
 
@@ -251,7 +251,7 @@ namespace Kontur.Rabbitmq.Tests
         public void CanCreateEmptyHeadersFromAmqpProperties()
         {
             IAmqpProperties properties = A.Fake<IAmqpProperties>();
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 
@@ -265,7 +265,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "utf-8";
             A.CallTo(() => properties.ContentEncoding).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 
@@ -281,7 +281,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "text/plain";
             A.CallTo(() => properties.ContentType).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 
@@ -297,7 +297,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "100500";
             A.CallTo(() => properties.CorrelationId).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 
@@ -313,7 +313,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "100500";
             A.CallTo(() => properties.MessageId).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 
@@ -329,7 +329,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "True";
             A.CallTo(() => properties.Persistent).Returns(bool.Parse(headerValue));
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 
@@ -345,7 +345,7 @@ namespace Kontur.Rabbitmq.Tests
             const string headerValue = "some address";
             A.CallTo(() => properties.ReplyTo).Returns(headerValue);
 
-            AmqpPropertyBuilder sut = new AmqpPropertyBuilder();
+            var sut = new AmqpPropertyBuilder();
 
             IDictionary<string, string> headers = sut.BuildHeadersFromProperties(properties);
 

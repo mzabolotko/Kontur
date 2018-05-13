@@ -17,7 +17,7 @@ bld/
 [Ll]og/
 
 .vs/
+.vscode/
 
-.paket/paket.exe
 paket-files/
 packages/

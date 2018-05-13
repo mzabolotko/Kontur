@@ -19,20 +19,20 @@ namespace Kontur
 
         public ISubscriptionTag Subscribe<T>(Action<Message<T>> subscriber)
         {
-            BufferBlock<IMessage> workerQueue = new BufferBlock<IMessage>();
-            ISubscriptionTag dispatcherTag = this.LinkToDispatcher<T>(workerQueue);
+            var workerQueue = new BufferBlock<IMessage>();
+            ISubscriptionTag workerQueueTag = this.LinkToDispatcher<T>(workerQueue);
 
-            ActionBlock<IMessage> worker = new ActionBlock<IMessage>(m => subscriber(this.As<T>(m)));
+            var worker = new ActionBlock<IMessage>(m => subscriber(this.As<T>(m)));
             workerQueue.LinkTo(worker);
 
-            return dispatcherTag;
+            return workerQueueTag;
         }
 
         public ISubscriptionTag Subscribe<T>(ISubscriber subscriber)
         {
-            BufferBlock<IMessage> workerQueue = new BufferBlock<IMessage>();
+            var workerQueue = new BufferBlock<IMessage>();
 
-            ISubscriptionTag dispatcherTag = this.LinkToDispatcher<T>(workerQueue);
+            ISubscriptionTag workerQueueTag = this.LinkToDispatcher<T>(workerQueue);
 
             ISubscriptionTag tag = subscriber.LinkTo(workerQueue);
             return new CompositeSubscriptionTag(
@@ -40,7 +40,7 @@ namespace Kontur
                 new List<ISubscriptionTag>
                 {
                     tag,
-                    dispatcherTag
+                    workerQueueTag
                 });
         }
 
@@ -76,9 +76,9 @@ namespace Kontur
         {
             IDisposable link = this.dispatcher.LinkTo(target, message => typeof(T) == message.RouteKey);
 
-            string subsriptionId = Guid.NewGuid().ToString();
-            ISubscriptionTag dispatcherTag = new SubscriptionTag(subsriptionId, link);
-            dispatcherTag = subscribers.AddOrUpdate(subsriptionId, dispatcherTag, (o, n) => n);
+            string subscriptionId = Guid.NewGuid().ToString();
+            ISubscriptionTag dispatcherTag = new SubscriptionTag(subscriptionId, link);
+            dispatcherTag = subscribers.AddOrUpdate(subscriptionId, dispatcherTag, (o, n) => n);
 
             return dispatcherTag;
         }

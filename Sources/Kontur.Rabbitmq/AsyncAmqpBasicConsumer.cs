@@ -1,11 +1,12 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
 namespace Kontur.Rabbitmq
 {
-    class AmqpBasicConsumer<T> : IPublisher
+    class AsyncAmqpBasicConsumer<T> : IPublisher
     {
         private readonly IAmqpConnectionFactory connectionFactory;
         private readonly IAmqpPropertyBuilder amqpPropertyBuilder;
@@ -15,12 +16,13 @@ namespace Kontur.Rabbitmq
         private IModel channel;
         private IConnection connection;
         private IDisposable link;
+        private TransformBlock<AmqpMessage, IMessage> convertBlock;
 
-        public AmqpBasicConsumer(
-            IAmqpConnectionFactory connectionFactory, 
-            IAmqpPropertyBuilder amqpPropertyBuilder, 
-            IMessageBuilder messageBuilder, 
-            bool continueOnCapturedContext, 
+        public AsyncAmqpBasicConsumer(
+            IAmqpConnectionFactory connectionFactory,
+            IAmqpPropertyBuilder amqpPropertyBuilder,
+            IMessageBuilder messageBuilder,
+            bool continueOnCapturedContext,
             string queue)
         {
             this.connectionFactory = connectionFactory;
@@ -40,30 +42,37 @@ namespace Kontur.Rabbitmq
 
         public IPublishingTag LinkTo(ITargetBlock<IMessage> target)
         {
+            if (this.connection != null || this.channel != null || this.convertBlock != null)
+            {
+                throw new InvalidOperationException("You could not link it more than once.");
+            }
+
             this.connection = this.connectionFactory.CreateConnection();
             this.channel = this.connection.CreateModel();
 
-            var transformBlock = new TransformBlock<AmqpMessage, IMessage>(
+            this.convertBlock = new TransformBlock<AmqpMessage, IMessage>(
                 (Func<AmqpMessage, IMessage>) this.messageBuilder.Build<T>);
 
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += async (ch, ea) =>
-            {
-                var result = await transformBlock.SendAsync(
-                    new AmqpMessage(
-                        amqpPropertyBuilder.BuildPropertiesFromProperties(ea.BasicProperties),
-                        ea.Exchange,
-                        ea.RoutingKey,
-                        ea.Body)
-                ).ConfigureAwait(this.continueOnCapturedContext);
-
-                channel.BasicAck(ea.DeliveryTag, false);
-            };
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.Received += OnReceived;
             string consumerTag = channel.BasicConsume(this.queue, false, consumer);
 
-            this.link = transformBlock.LinkTo(target);
+            this.link = this.convertBlock.LinkTo(target);
 
             return new PublishingTag(consumerTag, CancelConsuming);
+        }
+
+        public async Task OnReceived(object channel, BasicDeliverEventArgs eventArgs)
+        {
+            var result = await this.convertBlock.SendAsync(
+                new AmqpMessage(
+                    amqpPropertyBuilder.BuildPropertiesFromProperties(eventArgs.BasicProperties),
+                    eventArgs.Exchange,
+                    eventArgs.RoutingKey,
+                    eventArgs.Body)
+            ).ConfigureAwait(this.continueOnCapturedContext);
+
+            this.channel.BasicAck(eventArgs.DeliveryTag, false);
         }
     }
 }

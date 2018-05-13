@@ -8,8 +8,6 @@ namespace Kontur.Rabbitmq.Tests
     [TestFixture]
     internal class MessageBuilderFixture
     {
-        
-
         [Test]
         public void CanBuildMessageFromAmqp()
         {

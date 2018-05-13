@@ -16,7 +16,7 @@ namespace Kontur.Rabbitmq
         public AmqpSubscriptionBuilder()
         {
             this.defaultSerializer = new SimpleSerializer();
-            this.connectionFactory = new AmqpConnectionFactory(new Uri("amqp://"));
+            this.connectionFactory = new AsyncAmqpConnectionFactory(new Uri("amqp://"));
             this.router = new AmqpRouter();
             this.propertyBuilder = new AmqpPropertyBuilder();
             this.subscriptions = new List<Func<IAmqpConnectionFactory, AmqpMessageBuilder, ISubscriptionRegistry, ISubscriptionTag>>();
@@ -42,8 +42,8 @@ namespace Kontur.Rabbitmq
 
         public ISubscriptionTag Build(ISubscriptionRegistry registry)
         {
-            IAmqpSerializerFactory serializerFactory = new AmqpSerializerFactory("plain/text", defaultSerializer);
-            AmqpMessageBuilder amqpMessageBuilder = new AmqpMessageBuilder(propertyBuilder, router, serializerFactory);
+            var serializerFactory = new AmqpSerializerFactory("plain/text", defaultSerializer);
+            var amqpMessageBuilder = new AmqpMessageBuilder(propertyBuilder, router, serializerFactory);
 
             var subscriptionTags =
                 this.subscriptions
