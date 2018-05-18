@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using RabbitMQ.Client;
 
 namespace Kontur.Rabbitmq
 {
@@ -12,11 +13,9 @@ namespace Kontur.Rabbitmq
         public static readonly string Persistent = "persistent";
         public static readonly string ReplyTo = "reply-to";
 
-        public IAmqpProperties Build(IMessage message)
+        public IAmqpProperties BuildPropertiesFromHeaders(IReadOnlyDictionary<string, string> headers)
         {
             var properties = new AmqpProperties();
-
-            IReadOnlyDictionary<string, string> headers = message.Headers;
 
             properties.ContentEncoding = GetHeaderOrNull(headers, ContentEncoding);
             properties.ContentType = GetHeaderOrNull(headers, ContentType);
@@ -33,12 +32,39 @@ namespace Kontur.Rabbitmq
                 Persistent,
                 ReplyTo
             };
-            properties.Headers = 
+            properties.Headers =
                 headers
                 .Where(kv => !presetHeaders.Contains(kv.Key))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
             return properties;
+        }
+
+        public IAmqpProperties BuildPropertiesFromProperties(IBasicProperties basicProperties)
+        {
+            var properties = new AmqpProperties();
+
+            properties.ContentEncoding = basicProperties.ContentEncoding;
+            properties.ContentType = basicProperties.ContentType;
+            properties.CorrelationId = basicProperties.CorrelationId;
+            properties.MessageId = basicProperties.MessageId;
+            properties.Persistent = basicProperties.Persistent;
+            properties.ReplyTo = basicProperties.ReplyTo;
+            properties.Headers = basicProperties.Headers.ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
+
+            return properties;
+        }
+
+        public IDictionary<string, string> BuildHeadersFromProperties(IAmqpProperties amqpProperties)
+        {
+            var headers = new Dictionary<string, string>(amqpProperties.Headers);
+            headers.Add(ContentEncoding, amqpProperties.ContentEncoding);
+            headers.Add(ContentType, amqpProperties.ContentType);
+            headers.Add(CorrelationId, amqpProperties.CorrelationId);
+            headers.Add(MessageId, amqpProperties.MessageId);
+            headers.Add(Persistent, amqpProperties.Persistent.ToString());
+            headers.Add(ReplyTo, amqpProperties.ReplyTo);
+            return headers;
         }
 
         private string GetHeaderOrNull(IReadOnlyDictionary<string, string> headers, string headerName)

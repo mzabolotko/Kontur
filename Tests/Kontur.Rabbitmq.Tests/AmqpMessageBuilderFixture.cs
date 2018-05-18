@@ -18,8 +18,8 @@ namespace Kontur.Rabbitmq.Tests
             IMessage message = A.Fake<IMessage>();
             A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
             A.CallTo(() => message.RouteKey).Returns(typeof(object));
-            
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
+
+            var sut = new AmqpMessageBuilder(
                                         propertyBuilder,
                                         router,
                                         serializerFactory);
@@ -42,7 +42,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
             A.CallTo(() => message.RouteKey).Returns(typeof(object));
 
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
+            var sut = new AmqpMessageBuilder(
                                         propertyBuilder,
                                         router,
                                         serializerFactory);
@@ -65,7 +65,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
             A.CallTo(() => message.RouteKey).Returns(typeof(object));
 
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
+            var sut = new AmqpMessageBuilder(
                                         propertyBuilder,
                                         router,
                                         serializerFactory);
@@ -91,7 +91,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
             A.CallTo(() => message.RouteKey).Returns(typeof(object));
 
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
+            var sut = new AmqpMessageBuilder(
                                         propertyBuilder,
                                         router,
                                         serializerFactory);
@@ -101,6 +101,5 @@ namespace Kontur.Rabbitmq.Tests
             amqpMessage.Payload.Should().NotBeNull(because: "Router evaluates payload");
             amqpMessage.Payload.Should().BeEquivalentTo(payload, because: "Router evaluates payload");
         }
-
     }
 }

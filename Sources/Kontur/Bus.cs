@@ -6,34 +6,47 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Kontur
 {
-    public class Bus
+    public class Bus : IPublisherRegistry, ISubscriptionRegistry
     {
         private readonly BufferBlock<IMessage> inbox = new BufferBlock<IMessage>();
         private readonly BroadcastBlock<IMessage> dispatcher = new BroadcastBlock<IMessage>(message => message);
-        private readonly ConcurrentDictionary<Guid, IDisposable> subscribers = new ConcurrentDictionary<Guid, IDisposable>();
+        private readonly ConcurrentDictionary<string, ISubscriptionTag> subscribers = new ConcurrentDictionary<string, ISubscriptionTag>();
 
         public Bus()
         {
             this.inbox.LinkTo(dispatcher);
         }
 
-        public ISubscriptionTag Subscribe<T>(Action<IMessage> subscriber)
+        public ISubscriptionTag Subscribe<T>(Action<Message<T>> subscriber)
         {
-            ActionBlock<IMessage> worker = new ActionBlock<IMessage>(subscriber);
+            var workerQueue = new BufferBlock<IMessage>();
+            ISubscriptionTag workerQueueTag = this.LinkToDispatcher<T>(workerQueue);
 
-            return Subscribe<T>(worker);
+            var worker = new ActionBlock<IMessage>(m => subscriber(this.As<T>(m)));
+            workerQueue.LinkTo(worker);
+
+            return workerQueueTag;
         }
 
-        public ISubscriptionTag Subscribe<T>(ITargetBlock<IMessage> subscriber)
+        public ISubscriptionTag Subscribe<T>(ISubscriber subscriber)
         {
-            BufferBlock<IMessage> workerQueue = new BufferBlock<IMessage>();
-            workerQueue.LinkTo(subscriber);
+            var workerQueue = new BufferBlock<IMessage>();
 
-            IDisposable link = this.dispatcher.LinkTo(workerQueue, message => typeof(T) == message.RouteKey);
-            Guid subsriptionId = Guid.NewGuid();
-            link = subscribers.AddOrUpdate(subsriptionId, link, (o, n) => n);
+            ISubscriptionTag workerQueueTag = this.LinkToDispatcher<T>(workerQueue);
 
-            return new SubscriptionTag(subsriptionId, link);
+            ISubscriptionTag tag = subscriber.LinkTo(workerQueue);
+            return new CompositeSubscriptionTag(
+                Guid.NewGuid().ToString(),
+                new List<ISubscriptionTag>
+                {
+                    tag,
+                    workerQueueTag
+                });
+        }
+
+        public IPublishingTag RegisterPublisher(IPublisher publisher)
+        {
+            return publisher.LinkTo(this.inbox);
         }
 
         public async Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
@@ -52,6 +65,22 @@ namespace Kontur
         {
             tag.Dispose();
             this.subscribers.TryRemove(tag.Id, out var worker);
+        }
+
+        private Message<T> As<T>(IMessage message)
+        {
+            return (message as Message<T>);
+        }
+
+        private ISubscriptionTag LinkToDispatcher<T>(ITargetBlock<IMessage> target)
+        {
+            IDisposable link = this.dispatcher.LinkTo(target, message => typeof(T) == message.RouteKey);
+
+            string subscriptionId = Guid.NewGuid().ToString();
+            ISubscriptionTag dispatcherTag = new SubscriptionTag(subscriptionId, link);
+            dispatcherTag = subscribers.AddOrUpdate(subscriptionId, dispatcherTag, (o, n) => n);
+
+            return dispatcherTag;
         }
     }
 }

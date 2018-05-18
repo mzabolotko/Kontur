@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Kontur.Rabbitmq
 {
-    internal interface IAmqpProperties
+    public interface IAmqpProperties
     {
         string ReplyTo { get; }
         bool Persistent { get; }

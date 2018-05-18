@@ -19,3 +19,4 @@ group RabbitMqTests
     nuget NUnit 3.9.0
     nuget NUnit3TestAdapter 3.9.0
     nuget FakeItEasy 4.5.0
+    nuget Newtonsoft.Json 11.0.2
