@@ -2,7 +2,7 @@
 
 namespace Kontur
 {
-    public interface ISubscriptionTag : IDisposable
+    public interface IPublishingTag : IDisposable
     {
         string Id { get; }
     }

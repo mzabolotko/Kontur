@@ -2,6 +2,8 @@ using FluentAssertions;
 using System;
 using System.Threading;
 using NUnit.Framework;
+using FakeItEasy;
+using System.Threading.Tasks.Dataflow;
 
 namespace Kontur.Tests
 {
@@ -51,6 +53,18 @@ namespace Kontur.Tests
             sut.IsSubscribed(tag).Should().BeTrue(because: "the bus creates the subscription");
         }
 
+        [Test(Description = "Can subscribe the subscriber to the bus.")]
+        public void CanSubscribeSubscriber()
+        {
+            ISubscriber subscriber = A.Fake<ISubscriber>();
+
+            var sut = new Bus();
+            ISubscriptionTag tag = sut.Subscribe<string>(subscriber);
+
+            tag.Should().NotBeNull();
+            A.CallTo(() => subscriber.LinkTo(A<ISourceBlock<IMessage>>.Ignored)).MustHaveHappenedOnceExactly();
+        }
+
         [Test(Description = "Can unsubscribe from the bus")]
         public void CanUnsubscribe()
         {
@@ -59,6 +73,17 @@ namespace Kontur.Tests
 
             sut.Unsubscribe(tag);
             sut.IsSubscribed(tag).Should().BeFalse(because: "the bus unsubscribe it");
+        }
+
+        [Test(Description = "Can register publisher to the bus.")]
+        public void CanRegisterPublisher()
+        {
+            IPublisher publisher = A.Fake<IPublisher>();
+            var sut = new Bus();
+
+            IPublishingTag tag = sut.RegisterPublisher(publisher);
+            tag.Should().NotBeNull();
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).MustHaveHappenedOnceExactly();
         }
     }
 

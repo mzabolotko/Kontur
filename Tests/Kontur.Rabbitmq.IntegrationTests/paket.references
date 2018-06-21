@@ -5,3 +5,4 @@
     NUnit3TestAdapter
     FluentAssertions
     FakeItEasy
+    Newtonsoft.Json

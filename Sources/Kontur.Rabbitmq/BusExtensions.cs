@@ -4,11 +4,18 @@ namespace Kontur.Rabbitmq
 {
     public static class BusExtensions
     {
-        public static ISubscriptionTag WithRabbitMq<T>(this Bus bus, Func<IAmqpSubscriptionBuilder, IAmqpSubscriptionBuilder> build)
+        public static ISubscriptionTag ToRabbitMq(this Bus bus, Func<IAmqpSubscriptionBuilder, IAmqpSubscriptionBuilder> build)
         {
-            AmqpSubscriptionBuilder builder = new AmqpSubscriptionBuilder();
+            var builder = new AmqpSubscriptionBuilder();
             builder = (AmqpSubscriptionBuilder) build(builder);
-            return builder.Build<T>(bus);
+            return builder.Build(bus);
+        }
+
+        public static IPublishingTag FromRabbitMq(this Bus bus, Func<IAmqpPublishingBuilder, IAmqpPublishingBuilder> build)
+        {
+            var builder = new AmqpPublishingBuilder();
+            builder = (AmqpPublishingBuilder) build(builder);
+            return builder.Build(bus);
         }
     }
 }
