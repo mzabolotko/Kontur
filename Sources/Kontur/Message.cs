@@ -5,12 +5,10 @@ namespace Kontur
 {
     public class Message<T> : IMessage
     {
-        private readonly T payload;
-
         public Message(T payload, IDictionary<string, string> headers)
         {
             this.RouteKey = typeof(T);
-            this.payload = payload;
+            this.Payload = payload;
             this.Headers = (IReadOnlyDictionary<string, string>) headers;
         }
 
@@ -18,8 +16,8 @@ namespace Kontur
 
         public IReadOnlyDictionary<string, string> Headers { get; }
 
-        object IMessage.Payload => this.payload;
+        object IMessage.Payload => this.Payload;
 
-        public T Payload => this.payload;
+        public T Payload { get; }
     }
 }

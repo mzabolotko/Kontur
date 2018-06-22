@@ -1,5 +1,6 @@
 ﻿using FakeItEasy;
 using FluentAssertions;
+using Kontur.Rabbitmq.Tests.Plumbing;
 using NUnit.Framework;
 
 namespace Kontur.Rabbitmq.Tests
@@ -8,10 +9,9 @@ namespace Kontur.Rabbitmq.Tests
     internal class AmqpSubscriptionBuilderFixture
     {
         [Test]
-        public void CanSetConnectionFactory()
+        public void SetConnectionFactory()
         {
-            IAmqpConnectionFactory connectionFactory = A.Fake<IAmqpConnectionFactory>();
-
+            var connectionFactory = A.Fake<IAmqpConnectionFactory>();
             var sut = new AmqpSubscriptionBuilder();
 
             sut.WithConnectionFactory(connectionFactory);
@@ -20,11 +20,11 @@ namespace Kontur.Rabbitmq.Tests
         }
 
         [Test]
-        public void CanBuildWithoutSubscribers()
+        public void BuildWithoutSubscribers()
         {
-            ISubscriptionRegistry registry = A.Fake<ISubscriptionRegistry>();
-
+            var registry = A.Fake<ISubscriptionRegistry>();
             var sut = new AmqpSubscriptionBuilder();
+
             ISubscriptionTag publishingTag = sut.Build(registry);
 
             A.CallTo(registry)
@@ -33,16 +33,27 @@ namespace Kontur.Rabbitmq.Tests
         }
 
         [Test]
-        public void CanBuildWithSubscribers()
+        public void BuildWithSubscribers()
         {
-            ISubscriptionRegistry registry = A.Fake<ISubscriptionRegistry>();
-
+            var registry = A.Fake<ISubscriptionRegistry>();
             var sut = new AmqpSubscriptionBuilder();
             sut.RouteTo<string>("test1", "test1");
             sut.RouteTo<string>("test2", "test2");
+
             ISubscriptionTag publishingTag = sut.Build(registry);
 
             A.CallTo(() => registry.Subscribe<string>(A<ISubscriber>.Ignored)).MustHaveHappenedTwiceExactly();
+        }
+
+        [Test]
+        public void BuildWithSerializer()
+        {
+            var serializer = A.Fake<IAmqpSerializer>();
+            var sut = new AmqpSubscriptionBuilder();
+
+            sut.WithSerializer("contentType", serializer);
+
+            sut.Serializers.Should().HaveCount(2, because: "one more serializer should be added to the collection");
         }
     }
 }
