@@ -46,7 +46,7 @@ namespace Kontur.Rabbitmq.Tests
         }
 
         [Test]
-        public void BuildWithSerializer()
+        public void CanSetSerializer()
         {
             var serializer = A.Fake<IAmqpSerializer>();
             var sut = new AmqpSubscriptionBuilder();

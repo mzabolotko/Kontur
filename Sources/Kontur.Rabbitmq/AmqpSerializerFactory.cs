@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Kontur.Rabbitmq
@@ -26,7 +25,14 @@ namespace Kontur.Rabbitmq
 
         public IAmqpSerializer CreateSerializer(IMessage message)
         {
-            if (this.serializers.TryGetValue(message.Headers[AmqpPropertyBuilder.ContentType], out var serializer))
+            var contentType = message.Headers[AmqpPropertyBuilder.ContentType];
+
+            return this.CreateSerializer(contentType);
+        }
+
+        public IAmqpSerializer CreateSerializer(string contentType)
+        {
+            if (this.serializers.TryGetValue(contentType, out var serializer))
             {
                 return serializer;
             }

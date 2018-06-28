@@ -8,10 +8,10 @@ namespace Kontur.Rabbitmq
     {
         private readonly IAmqpRouter router;
         private readonly IAmqpPropertyBuilder propertyBuilder;
-        private readonly IList<Func<IAmqpConnectionFactory, AmqpMessageBuilder, ISubscriptionRegistry, ISubscriptionTag>> subscriptions;
+        private readonly IList<Func<IAmqpConnectionFactory, IAmqpMessageBuilder, ISubscriptionRegistry, ISubscriptionTag>> subscriptions;
 
         public IAmqpConnectionFactory ConnectionFactory { get; private set; }
-        public IDictionary<string, IAmqpSerializer> Serializers { get; private set; }
+        public IDictionary<string, IAmqpSerializer> Serializers { get; }
 
         public AmqpSubscriptionBuilder()
         {
@@ -22,7 +22,7 @@ namespace Kontur.Rabbitmq
             this.ConnectionFactory = new AsyncAmqpConnectionFactory(new Uri("amqp://"));
             this.router = new AmqpRouter();
             this.propertyBuilder = new AmqpPropertyBuilder();
-            this.subscriptions = new List<Func<IAmqpConnectionFactory, AmqpMessageBuilder, ISubscriptionRegistry, ISubscriptionTag>>();
+            this.subscriptions = new List<Func<IAmqpConnectionFactory, IAmqpMessageBuilder, ISubscriptionRegistry, ISubscriptionTag>>();
         }
 
         public IAmqpSubscriptionBuilder RouteTo<T>(string exchangeName, string routingKey)
@@ -50,7 +50,7 @@ namespace Kontur.Rabbitmq
         public ISubscriptionTag Build(ISubscriptionRegistry registry)
         {
             var serializerFactory = new AmqpSerializerFactory(this.Serializers);
-            var amqpMessageBuilder = new AmqpMessageBuilder(propertyBuilder, router, serializerFactory);
+            var amqpMessageBuilder = new AmqpMessageBuilder(serializerFactory, propertyBuilder, router);
 
             var subscriptionTags =
                 this.subscriptions

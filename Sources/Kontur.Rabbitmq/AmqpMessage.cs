@@ -1,9 +1,6 @@
-﻿using RabbitMQ.Client;
-
-namespace Kontur.Rabbitmq
+﻿namespace Kontur.Rabbitmq
 {
-    //TODO: support mandatory publish
-
+    // TODO: support mandatory publish
     public class AmqpMessage
     {
         public AmqpMessage(
@@ -19,9 +16,11 @@ namespace Kontur.Rabbitmq
         }
 
         public IAmqpProperties Properties { get; }
+
         public string ExchangeName { get; }
+
         public string RoutingKey { get; }
+
         public byte[] Payload { get; }
     }
-
 }

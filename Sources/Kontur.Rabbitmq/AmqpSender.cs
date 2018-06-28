@@ -7,12 +7,12 @@ namespace Kontur.Rabbitmq
     internal class AmqpSender : ISubscriber
     {
         private readonly IAmqpConnectionFactory connectionFactory;
-        private readonly AmqpMessageBuilder amqpMessageBuilder;
+        private readonly IAmqpMessageBuilder amqpMessageBuilder;
         private IDisposable link;
         private IModel model;
         private IConnection connection;
 
-        public AmqpSender(IAmqpConnectionFactory connectionFactory, AmqpMessageBuilder amqpMessageBuilder)
+        public AmqpSender(IAmqpConnectionFactory connectionFactory, IAmqpMessageBuilder amqpMessageBuilder)
         {
             this.connectionFactory = connectionFactory;
             this.amqpMessageBuilder = amqpMessageBuilder;
@@ -24,7 +24,7 @@ namespace Kontur.Rabbitmq
             this.model = this.connection.CreateModel();
 
             var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessage>(
-                    (Func<IMessage, AmqpMessage>)amqpMessageBuilder.Build);
+                    (Func<IMessage, AmqpMessage>)amqpMessageBuilder.Serialize);
 
             var amqpSenderBlock = new ActionBlock<AmqpMessage>(
                     (Action<AmqpMessage>)this.Send);
@@ -53,7 +53,5 @@ namespace Kontur.Rabbitmq
             this.model.Close();
             this.connection.Close();
         }
-
     }
-
 }

@@ -17,7 +17,7 @@ namespace Kontur.Rabbitmq.IntegrationTests
             using (var publishing = sut.FromRabbitMq(cfg =>
             {
                 cfg.ReactOn<Message>("test");
-                cfg.WithDeserializerFactory(new DeserializerFactory());
+                cfg.WithDeserializer("contentType", new SimpleSerializer());
 
                 return cfg;
             }))
@@ -37,20 +37,30 @@ namespace Kontur.Rabbitmq.IntegrationTests
         public string Id { get; set; }
     }
 
-    internal class JsonNetDeserializer : IAmqpDeserializer
+    internal class JsonNetDeserializer : IAmqpSerializer
     {
-        public T Deserialize<T>(AmqpMessage amqpMessage)
+        public T Deserialize<T>(AmqpMessage amqpMessage) where T : class 
         {
             string payload = System.Text.Encoding.UTF8.GetString(amqpMessage.Payload);
             return JsonConvert.DeserializeObject<T>(payload);
         }
+
+        public byte[] Serialize(IMessage message)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 
-    internal class DeserializerFactory : IAmqpDeserializerFactory
+    internal class DeserializerFactory : IAmqpSerializerFactory
     {
-        public IAmqpDeserializer CreateDeserializer(AmqpMessage amqpMessage)
+        public IAmqpSerializer CreateSerializer(IMessage message)
         {
-            return new JsonNetDeserializer();
+            throw new System.NotImplementedException();
+        }
+
+        public IAmqpSerializer CreateSerializer(string contentType)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
