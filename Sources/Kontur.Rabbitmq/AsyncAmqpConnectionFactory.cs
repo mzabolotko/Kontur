@@ -3,14 +3,15 @@ using System;
 
 namespace Kontur.Rabbitmq
 {
-    internal class AmqpConnectionFactory : IAmqpConnectionFactory
+    internal class AsyncAmqpConnectionFactory : IAmqpConnectionFactory
     {
         private readonly ConnectionFactory factory;
 
-        public AmqpConnectionFactory(Uri uri)
+        public AsyncAmqpConnectionFactory(Uri uri)
         {
             this.factory = new ConnectionFactory();
             this.factory.Uri = uri;
+            this.factory.DispatchConsumersAsync = true;
         }
 
         public IConnection CreateConnection()

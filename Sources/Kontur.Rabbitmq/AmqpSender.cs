@@ -7,12 +7,12 @@ namespace Kontur.Rabbitmq
     internal class AmqpSender : ISubscriber
     {
         private readonly IAmqpConnectionFactory connectionFactory;
-        private readonly AmqpMessageBuilder amqpMessageBuilder;
+        private readonly IAmqpMessageBuilder amqpMessageBuilder;
         private IDisposable link;
         private IModel model;
         private IConnection connection;
 
-        public AmqpSender(IAmqpConnectionFactory connectionFactory, AmqpMessageBuilder amqpMessageBuilder)
+        public AmqpSender(IAmqpConnectionFactory connectionFactory, IAmqpMessageBuilder amqpMessageBuilder)
         {
             this.connectionFactory = connectionFactory;
             this.amqpMessageBuilder = amqpMessageBuilder;
@@ -23,17 +23,14 @@ namespace Kontur.Rabbitmq
             this.connection = this.connectionFactory.CreateConnection();
             this.model = this.connection.CreateModel();
 
-            TransformBlock<IMessage, AmqpMessage> amqpBuilderBlock =
-                new TransformBlock<IMessage, AmqpMessage>(
-                    (Func<IMessage, AmqpMessage>)amqpMessageBuilder.Build);
+            var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessage>(
+                    (Func<IMessage, AmqpMessage>)amqpMessageBuilder.Serialize);
 
-            ActionBlock<AmqpMessage> amqpSenderBlock =
-                new ActionBlock<AmqpMessage>(
+            var amqpSenderBlock = new ActionBlock<AmqpMessage>(
                     (Action<AmqpMessage>)this.Send);
 
-            amqpBuilderBlock.LinkTo(amqpSenderBlock);
-
             this.link = source.LinkTo(amqpBuilderBlock);
+            amqpBuilderBlock.LinkTo(amqpSenderBlock);
 
             return new SubscribingTag(Guid.NewGuid().ToString(), this.CancelSending);
         }
@@ -56,7 +53,5 @@ namespace Kontur.Rabbitmq
             this.model.Close();
             this.connection.Close();
         }
-
     }
-
 }

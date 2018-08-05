@@ -11,20 +11,14 @@ namespace Kontur.Rabbitmq.Tests
         [Test(Description = "Can build an amqp message with basic properties")]
         public void CanBuildAmqpMessageWithBasicProperties()
         {
-            IAmqpPropertyBuilder propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
-            IAmqpRouter router = A.Fake<IAmqpRouter>();
-            IAmqpSerializerFactory serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
+            var router = A.Fake<IAmqpRouter>();
+            var serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var message = GetMessage();
 
-            IMessage message = A.Fake<IMessage>();
-            A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
-            A.CallTo(() => message.RouteKey).Returns(typeof(object));
-            
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
-                                        propertyBuilder,
-                                        router,
-                                        serializerFactory);
+            var sut = new AmqpMessageBuilder(serializerFactory, propertyBuilder, router);
 
-            AmqpMessage amqpMessage = sut.Build(message);
+            AmqpMessage amqpMessage = sut.Serialize(message);
 
             amqpMessage.Properties.Should().NotBeNull(because : "Source message contains headers");
         }
@@ -32,22 +26,16 @@ namespace Kontur.Rabbitmq.Tests
         [Test(Description = "Can build an amqp message with exchange name")]
         public void CanBuildAmqpMessageWithExchangeName()
         {
-            IAmqpPropertyBuilder propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
-            IAmqpRouter router = A.Fake<IAmqpRouter>();
+            var propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
+            var router = A.Fake<IAmqpRouter>();
             const string Command = "command.do.something";
             A.CallTo(() => router.GetExchange(A<IMessage>.Ignored)).Returns(Command);
-            IAmqpSerializerFactory serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var message = GetMessage();
 
-            IMessage message = A.Fake<IMessage>();
-            A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
-            A.CallTo(() => message.RouteKey).Returns(typeof(object));
+            var sut = new AmqpMessageBuilder(serializerFactory, propertyBuilder, router);
 
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
-                                        propertyBuilder,
-                                        router,
-                                        serializerFactory);
-
-            AmqpMessage amqpMessage = sut.Build(message);
+            AmqpMessage amqpMessage = sut.Serialize(message);
 
             amqpMessage.ExchangeName.Should().NotBeNull(because: "Source message contains the payload type");
             amqpMessage.ExchangeName.Should().Be(Command, because: "The router evaluates exchange name");
@@ -56,21 +44,15 @@ namespace Kontur.Rabbitmq.Tests
         [Test(Description = "Can build an amqp message with routing key")]
         public void CanBuildAmqpMessageWithRoutingKey()
         {
-            IAmqpPropertyBuilder propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
-            IAmqpRouter router = A.Fake<IAmqpRouter>();
+            var propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
+            var router = A.Fake<IAmqpRouter>();
             A.CallTo(() => router.GetRoutingKey(A<IMessage>.Ignored)).Returns("nothing");
-            IAmqpSerializerFactory serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var message = GetMessage();
 
-            IMessage message = A.Fake<IMessage>();
-            A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
-            A.CallTo(() => message.RouteKey).Returns(typeof(object));
+            var sut = new AmqpMessageBuilder(serializerFactory, propertyBuilder, router);
 
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
-                                        propertyBuilder,
-                                        router,
-                                        serializerFactory);
-
-            AmqpMessage amqpMessage = sut.Build(message);
+            AmqpMessage amqpMessage = sut.Serialize(message);
 
             amqpMessage.RoutingKey.Should().NotBeNull(because: "Router evaluates routing key");
             amqpMessage.RoutingKey.Should().Be("nothing", because: "Router evaluates routing key");
@@ -79,28 +61,30 @@ namespace Kontur.Rabbitmq.Tests
         [Test(Description = "Can build an amqp message with payload")]
         public void CanBuildAmqpMessageWithPayload()
         {
-            byte[] payload = new byte[] { 1, 2, 3 };
-            IAmqpPropertyBuilder propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
-            IAmqpRouter router = A.Fake<IAmqpRouter>();
-            IAmqpSerializerFactory serializerFactory = A.Fake<IAmqpSerializerFactory>();
-            IAmqpSerializer serializer = A.Fake<IAmqpSerializer>();
+            var payload = new byte[] { 1, 2, 3 };
+            var propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
+            var router = A.Fake<IAmqpRouter>();
+            var serializerFactory = A.Fake<IAmqpSerializerFactory>();
+            var serializer = A.Fake<IAmqpSerializer>();
             A.CallTo(() => serializerFactory.CreateSerializer(A<IMessage>.Ignored)).Returns(serializer);
             A.CallTo(() => serializer.Serialize(A<IMessage>.Ignored)).Returns(payload);
+            var message = GetMessage();
 
-            IMessage message = A.Fake<IMessage>();
-            A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>() { });
-            A.CallTo(() => message.RouteKey).Returns(typeof(object));
+            var sut = new AmqpMessageBuilder(serializerFactory, propertyBuilder, router);
 
-            AmqpMessageBuilder sut = new AmqpMessageBuilder(
-                                        propertyBuilder,
-                                        router,
-                                        serializerFactory);
-
-            AmqpMessage amqpMessage = sut.Build(message);
+            AmqpMessage amqpMessage = sut.Serialize(message);
 
             amqpMessage.Payload.Should().NotBeNull(because: "Router evaluates payload");
             amqpMessage.Payload.Should().BeEquivalentTo(payload, because: "Router evaluates payload");
         }
 
+        private static IMessage GetMessage()
+        {
+            var message = A.Fake<IMessage>();
+            A.CallTo(() => message.Headers).Returns(new Dictionary<string, string>());
+            A.CallTo(() => message.RouteKey).Returns(typeof(object));
+
+            return message;
+        }
     }
 }

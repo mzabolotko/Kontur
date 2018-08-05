@@ -2,11 +2,12 @@
 {
     public interface IAmqpPublishingBuilder
     {
-        IAmqpPublishingBuilder WithDeserializerFactory(IAmqpDeserializerFactory deserializerFactory);
-        IAmqpPublishingBuilder WithConnectionFactory(IAmqpConnectionFactory connectionFactory);
-        IAmqpPublishingBuilder ReactOn<T>(string queue);
+        IAmqpPublishingBuilder WithDeserializer(string contentType, IAmqpSerializer serializer);
 
-        IAmqpDeserializerFactory DeserializerFactory { get; }
+        IAmqpPublishingBuilder WithConnectionFactory(IAmqpConnectionFactory connectionFactory);
+
+        IAmqpPublishingBuilder ReactOn<T>(string queue) where T : class;
+
         IAmqpConnectionFactory ConnectionFactory { get; }
     }
 }

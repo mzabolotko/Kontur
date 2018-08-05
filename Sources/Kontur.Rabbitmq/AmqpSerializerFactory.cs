@@ -1,20 +1,43 @@
-﻿namespace Kontur.Rabbitmq
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Kontur.Rabbitmq
 {
     internal class AmqpSerializerFactory : IAmqpSerializerFactory
     {
-        private readonly string defaultContentType;
-        private readonly IAmqpSerializer defaultSerializer;
+        private readonly IDictionary<string, IAmqpSerializer> serializers;
 
-        public AmqpSerializerFactory(string defaultContentType, IAmqpSerializer defaultSerializer)
+        public AmqpSerializerFactory(IDictionary<string, IAmqpSerializer> serializers)
         {
-            this.defaultContentType = defaultContentType;
-            this.defaultSerializer = defaultSerializer;
+            if (serializers == null)
+            {
+                throw new ArgumentNullException(nameof(serializers), "Serializers cannot be null");
+            }
+
+            if (!serializers.Any())
+            {
+                throw new ArgumentException("Should be provided at least one serializer", nameof(serializers));
+            }
+
+            this.serializers = serializers;
         }
 
         public IAmqpSerializer CreateSerializer(IMessage message)
         {
-            return defaultSerializer;
+            var contentType = message.Headers[AmqpPropertyBuilder.ContentType];
+
+            return this.CreateSerializer(contentType);
+        }
+
+        public IAmqpSerializer CreateSerializer(string contentType)
+        {
+            if (this.serializers.TryGetValue(contentType, out var serializer))
+            {
+                return serializer;
+            }
+
+            return this.serializers.First().Value;
         }
     }
-
 }

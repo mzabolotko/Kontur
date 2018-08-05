@@ -8,22 +8,20 @@ namespace Kontur.Rabbitmq.Tests
     internal class AmqpPublishingBuilderFixture
     {
         [Test]
-        public void CanSetDeserializerFactory()
+        public void CanSetDeserializer()
         {
-            IAmqpDeserializerFactory deserializerFactory = A.Fake<IAmqpDeserializerFactory>();
-
+            var serializer = A.Fake<IAmqpSerializer>();
             var sut = new AmqpPublishingBuilder();
 
-            sut.WithDeserializerFactory(deserializerFactory);
+            sut.WithDeserializer("contentType", serializer);
 
-            sut.DeserializerFactory.Should().Be(deserializerFactory, because: "Deserializer factory should be set.");
+            sut.Serializers.Should().HaveCount(2, because: "one more serializer should be added to the collection");
         }
 
         [Test]
         public void CanSetConnectionFactory()
         {
-            IAmqpConnectionFactory connectionFactory = A.Fake<IAmqpConnectionFactory>();
-
+            var connectionFactory = A.Fake<IAmqpConnectionFactory>();
             var sut = new AmqpPublishingBuilder();
 
             sut.WithConnectionFactory(connectionFactory);
@@ -34,9 +32,9 @@ namespace Kontur.Rabbitmq.Tests
         [Test]
         public void CanBuildWithoutPublishers()
         {
-            IPublisherRegistry registry = A.Fake<IPublisherRegistry>();
-
+            var registry = A.Fake<IPublisherRegistry>();
             var sut = new AmqpPublishingBuilder();
+
             IPublishingTag publishingTag = sut.Build(registry);
 
             A.CallTo(() => registry.RegisterPublisher<int>(A<IPublisher>.Ignored)).MustNotHaveHappened();            
@@ -45,9 +43,9 @@ namespace Kontur.Rabbitmq.Tests
         [Test]
         public void CanBuildWithPublishers()
         {
-            IPublisherRegistry registry = A.Fake<IPublisherRegistry>();
-
+            var registry = A.Fake<IPublisherRegistry>();
             var sut = new AmqpPublishingBuilder();
+
             sut.ReactOn<string>("test1");
             sut.ReactOn<string>("test2");
             IPublishingTag publishingTag = sut.Build(registry);

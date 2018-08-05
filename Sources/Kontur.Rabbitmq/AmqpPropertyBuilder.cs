@@ -32,7 +32,7 @@ namespace Kontur.Rabbitmq
                 Persistent,
                 ReplyTo
             };
-            properties.Headers = 
+            properties.Headers =
                 headers
                 .Where(kv => !presetHeaders.Contains(kv.Key))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
@@ -57,7 +57,7 @@ namespace Kontur.Rabbitmq
 
         public IDictionary<string, string> BuildHeadersFromProperties(IAmqpProperties amqpProperties)
         {
-            Dictionary<string, string> headers = new Dictionary<string, string>(amqpProperties.Headers);
+            var headers = new Dictionary<string, string>(amqpProperties.Headers);
             headers.Add(ContentEncoding, amqpProperties.ContentEncoding);
             headers.Add(ContentType, amqpProperties.ContentType);
             headers.Add(CorrelationId, amqpProperties.CorrelationId);
