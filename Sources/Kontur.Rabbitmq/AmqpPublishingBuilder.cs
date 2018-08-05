@@ -6,30 +6,31 @@ namespace Kontur.Rabbitmq
 {
     public class AmqpPublishingBuilder : IAmqpPublishingBuilder
     {
-        private readonly AmqpPropertyBuilder propertyBuilder;
-        private readonly List<Func<MessageBuilder, IAmqpConnectionFactory, IPublisher>> publishers;
+        private readonly IAmqpRouter router;
+        private readonly IAmqpPropertyBuilder propertyBuilder;
+        private readonly List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisher>> publishers;
 
-        private IAmqpConnectionFactory connectionFactory;
-        private IAmqpDeserializerFactory deserializerFactory;
-        private MessageBuilder messageBuilder;
+        public IAmqpConnectionFactory ConnectionFactory { get; private set; }
+        public IDictionary<string, IAmqpSerializer> Serializers { get; }
 
         public AmqpPublishingBuilder()
         {
+            this.Serializers = new Dictionary<string, IAmqpSerializer>
+            {
+                { "plain/text", new SimpleSerializer() }
+            };
+            this.router = new AmqpRouter();
             this.propertyBuilder = new AmqpPropertyBuilder();
-            this.connectionFactory = new AsyncAmqpConnectionFactory(new Uri("amqp://"));
-            this.publishers = new List<Func<MessageBuilder, IAmqpConnectionFactory, IPublisher>>();
+            this.ConnectionFactory = new AsyncAmqpConnectionFactory(new Uri("amqp://"));
+            this.publishers = new List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisher>>();
         }
 
-        public IAmqpDeserializerFactory DeserializerFactory => this.deserializerFactory;
-
-        public IAmqpConnectionFactory ConnectionFactory => this.connectionFactory;
-
-        public IAmqpPublishingBuilder ReactOn<T>(string queue)
+        public IAmqpPublishingBuilder ReactOn<T>(string queue) where T : class 
         {
             this.publishers.Add(
                 (messageBuilder, connectionFactory) =>
                     new AsyncAmqpBasicConsumer<T>(
-                        this.connectionFactory,
+                        this.ConnectionFactory,
                         this.propertyBuilder,
                         messageBuilder,
                         false,
@@ -38,32 +39,32 @@ namespace Kontur.Rabbitmq
             return this;
         }
 
-        public IAmqpPublishingBuilder WithDeserializerFactory(IAmqpDeserializerFactory deserializerFactory)
+        public IAmqpPublishingBuilder WithConnectionFactory(IAmqpConnectionFactory connectionFactory)
         {
-            this.deserializerFactory = deserializerFactory;
-            this.messageBuilder = new MessageBuilder(this.deserializerFactory, this.propertyBuilder);
+            this.ConnectionFactory = connectionFactory;
 
             return this;
         }
 
-        public IAmqpPublishingBuilder WithConnectionFactory(IAmqpConnectionFactory connectionFactory)
+        public IAmqpPublishingBuilder WithDeserializer(string contentType, IAmqpSerializer serializer)
         {
-            this.connectionFactory = connectionFactory;
+            this.Serializers.Add(contentType, serializer);
 
             return this;
         }
 
         public IPublishingTag Build(IPublisherRegistry registry)
         {
+            var serializerFactory = new AmqpSerializerFactory(this.Serializers);
+            var messageBuilder = new AmqpMessageBuilder(serializerFactory, this.propertyBuilder, this.router);
+
             List<IPublishingTag> tags =
                 this.publishers
-                    .Select(createPublisher => createPublisher(this.messageBuilder, this.connectionFactory))
-                    .Select(publisher => registry.RegisterPublisher(publisher))
+                    .Select(createPublisher => createPublisher(messageBuilder, this.ConnectionFactory))
+                    .Select(registry.RegisterPublisher)
                     .ToList();
 
-            var tag = new CompositePublishingTag(Guid.NewGuid().ToString(), tags);
-
-            return tag;
+            return new CompositePublishingTag(Guid.NewGuid().ToString(), tags);
         }
     }
 }

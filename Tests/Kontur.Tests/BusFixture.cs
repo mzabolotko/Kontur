@@ -1,5 +1,4 @@
 using FluentAssertions;
-using System;
 using System.Threading;
 using NUnit.Framework;
 using FakeItEasy;

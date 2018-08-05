@@ -6,11 +6,11 @@ using System.Threading.Tasks.Dataflow;
 
 namespace Kontur.Rabbitmq
 {
-    class AsyncAmqpBasicConsumer<T> : IPublisher
+    class AsyncAmqpBasicConsumer<T> : IPublisher where T : class 
     {
         private readonly IAmqpConnectionFactory connectionFactory;
         private readonly IAmqpPropertyBuilder amqpPropertyBuilder;
-        private readonly IMessageBuilder messageBuilder;
+        private readonly IAmqpMessageBuilder amqpMessageBuilder;
         private readonly bool continueOnCapturedContext;
         private readonly string queue;
         private IModel channel;
@@ -21,13 +21,13 @@ namespace Kontur.Rabbitmq
         public AsyncAmqpBasicConsumer(
             IAmqpConnectionFactory connectionFactory,
             IAmqpPropertyBuilder amqpPropertyBuilder,
-            IMessageBuilder messageBuilder,
+            IAmqpMessageBuilder amqpMessageBuilder,
             bool continueOnCapturedContext,
             string queue)
         {
             this.connectionFactory = connectionFactory;
             this.amqpPropertyBuilder = amqpPropertyBuilder;
-            this.messageBuilder = messageBuilder;
+            this.amqpMessageBuilder = amqpMessageBuilder;
             this.continueOnCapturedContext = continueOnCapturedContext;
             this.queue = queue;
         }
@@ -51,7 +51,7 @@ namespace Kontur.Rabbitmq
             this.channel = this.connection.CreateModel();
 
             this.convertBlock = new TransformBlock<AmqpMessage, IMessage>(
-                (Func<AmqpMessage, IMessage>) this.messageBuilder.Build<T>);
+                (Func<AmqpMessage, IMessage>) this.amqpMessageBuilder.Deserialize<T>);
 
             var consumer = new AsyncEventingBasicConsumer(channel);
             consumer.Received += OnReceived;

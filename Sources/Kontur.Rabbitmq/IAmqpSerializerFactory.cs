@@ -1,7 +1,9 @@
 ﻿namespace Kontur.Rabbitmq
 {
-    internal interface IAmqpSerializerFactory
+    public interface IAmqpSerializerFactory
     {
         IAmqpSerializer CreateSerializer(IMessage message);
+
+        IAmqpSerializer CreateSerializer(string contentType);
     }
 }

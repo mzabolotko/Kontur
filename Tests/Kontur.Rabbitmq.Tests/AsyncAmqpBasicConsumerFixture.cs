@@ -16,12 +16,12 @@ namespace Kontur.Rabbitmq.Tests
         {
             const string consumerTag = "_consumertag_";
 
-            IAmqpConnectionFactory connectionFactory = A.Fake<IAmqpConnectionFactory>();
-            IAmqpPropertyBuilder propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
-            IMessageBuilder messageBuilder = A.Fake<IMessageBuilder>();
-            ITargetBlock<IMessage> targetBlock = A.Fake<ITargetBlock<IMessage>>();
-            IConnection connection = A.Fake<IConnection>();
-            IModel channel = A.Fake<IModel>();
+            var connectionFactory = A.Fake<IAmqpConnectionFactory>();
+            var propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
+            var messageBuilder = A.Fake<IAmqpMessageBuilder>();
+            var targetBlock = A.Fake<ITargetBlock<IMessage>>();
+            var connection = A.Fake<IConnection>();
+            var channel = A.Fake<IModel>();
 
             A.CallTo(() => connectionFactory.CreateConnection()).Returns(connection);
             A.CallTo(() => connection.CreateModel()).Returns(channel);
@@ -50,12 +50,12 @@ namespace Kontur.Rabbitmq.Tests
         {
             const string consumerTag = "_consumertag_";
 
-            IAmqpConnectionFactory connectionFactory = A.Fake<IAmqpConnectionFactory>();
-            IAmqpPropertyBuilder propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
-            IMessageBuilder messageBuilder = A.Fake<IMessageBuilder>();
-            ITargetBlock<IMessage> targetBlock = A.Fake<ITargetBlock<IMessage>>();
-            IConnection connection = A.Fake<IConnection>();
-            IModel channel = A.Fake<IModel>();
+            var connectionFactory = A.Fake<IAmqpConnectionFactory>();
+            var propertyBuilder = A.Fake<IAmqpPropertyBuilder>();
+            var messageBuilder = A.Fake<IAmqpMessageBuilder>();
+            var targetBlock = A.Fake<ITargetBlock<IMessage>>();
+            var connection = A.Fake<IConnection>();
+            var channel = A.Fake<IModel>();
 
             A.CallTo(() => connectionFactory.CreateConnection()).Returns(connection);
             A.CallTo(() => connection.CreateModel()).Returns(channel);
