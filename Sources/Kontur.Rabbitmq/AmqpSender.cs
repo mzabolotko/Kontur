@@ -18,7 +18,7 @@ namespace Kontur.Rabbitmq
             this.amqpMessageBuilder = amqpMessageBuilder;
         }
 
-        public ISubscriptionTag LinkTo(ISourceBlock<IMessage> source)
+        public ISubscriptionTag SubscribeTo(ISourceBlock<IMessage> source)
         {
             this.connection = this.connectionFactory.CreateConnection();
             this.model = this.connection.CreateModel();

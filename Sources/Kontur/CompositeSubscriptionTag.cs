@@ -13,6 +13,12 @@ namespace Kontur
             this.subscriptionTags = subscriptionTags;
         }
 
+        public CompositeSubscriptionTag(string id, params ISubscriptionTag[] tags)
+        {
+            this.id = id;
+            this.subscriptionTags = new List<ISubscriptionTag>(tags);
+        }
+
         public string Id => this.id;
 
         public void Dispose()

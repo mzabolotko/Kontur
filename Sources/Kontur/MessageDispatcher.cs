@@ -5,21 +5,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
+using MessageTarget = System.Threading.Tasks.Dataflow.ITargetBlock<Kontur.IMessage>;
+using MessageTargetDictionary = System.Collections.Concurrent.ConcurrentDictionary<string, System.Threading.Tasks.Dataflow.ITargetBlock<Kontur.IMessage>>;
+
 namespace Kontur
 {
     internal class MessageDispatcher
     {
-        ConcurrentDictionary<Type, ConcurrentDictionary<string, ITargetBlock<IMessage>>> routes =
-            new ConcurrentDictionary<Type, ConcurrentDictionary<string, ITargetBlock<IMessage>>>();
+        ConcurrentDictionary<Type, MessageTargetDictionary> routes =
+            new ConcurrentDictionary<Type, MessageTargetDictionary>();
 
         internal IDisposable Subscribe<T>(ITargetBlock<IMessage> target)
         {
             var id = Guid.NewGuid().ToString();
-            var items = new List<KeyValuePair<string, ITargetBlock<IMessage>>>
+            var items = new List<KeyValuePair<string, MessageTarget>>
             {
-                new KeyValuePair<string, ITargetBlock<IMessage>>(id, target)
+                new KeyValuePair<string, MessageTarget>(id, target)
             };
-            var addValue = new ConcurrentDictionary<string, ITargetBlock<IMessage>>(items);
+            var addValue = new MessageTargetDictionary(items);
 
             routes.AddOrUpdate(
                 typeof(T),
@@ -34,7 +37,7 @@ namespace Kontur
 
         public Task Dispatch(IMessage message)
         {
-            if (routes.TryGetValue(message.RouteKey, out ConcurrentDictionary<string, ITargetBlock<IMessage>> subscribers))
+            if (routes.TryGetValue(message.RouteKey, out MessageTargetDictionary subscribers))
             {
                 var tasks = subscribers.Values.Select(target => target.SendAsync(message));
                 return Task.WhenAll(tasks);
@@ -45,9 +48,9 @@ namespace Kontur
 
         private bool Unsubscribe<T>(string id)
         {
-            if (routes.TryGetValue(typeof(T), out ConcurrentDictionary<string, ITargetBlock<IMessage>> value))
+            if (routes.TryGetValue(typeof(T), out MessageTargetDictionary value))
             {
-                if (value.TryRemove(id, out ITargetBlock<IMessage> target))
+                if (value.TryRemove(id, out MessageTarget target))
                 {
                     target.Complete();
                     return true;
@@ -65,7 +68,7 @@ namespace Kontur
 
         internal int GetCountSubscriberOf(Type type)
         {
-            if (routes.TryGetValue(type, out ConcurrentDictionary<string, ITargetBlock<IMessage>> value))
+            if (routes.TryGetValue(type, out MessageTargetDictionary value))
             {
                 return value.Count;
             }
