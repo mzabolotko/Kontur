@@ -5,6 +5,7 @@ using FakeItEasy;
 using System.Threading.Tasks.Dataflow;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Kontur.Tests
 {
@@ -162,6 +163,34 @@ namespace Kontur.Tests
 
             completed.Should().Be(taskCount);
             success.Should().Be(taskCount);
+        }
+
+        [Test(Description = "Can not fail if the subscriber throws an exception.")]
+        public void CanNotFailDuringSubscriberException()
+        {
+            var manualEvent = new ManualResetEventSlim(false);
+            var sut = new Bus();
+
+            var i = 0;
+            sut.Subscribe<string>(m => 
+            { 
+                if (i == 0) 
+                { 
+                    i++;
+                    throw new Exception(); 
+                } 
+                else 
+                { 
+                    manualEvent.Set(); 
+                } 
+            });
+
+
+            sut.EmitAsync("hello", new Dictionary<string, string>()).Wait();
+            sut.EmitAsync("hello", new Dictionary<string, string>()).Wait();
+
+            manualEvent.Wait(10).Should().BeTrue();
+            manualEvent.IsSet.Should().BeTrue();
         }
     }
 
