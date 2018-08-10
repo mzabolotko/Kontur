@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks.Dataflow;
 using RabbitMQ.Client;
 
@@ -23,11 +24,19 @@ namespace Kontur.Rabbitmq
             this.connection = this.connectionFactory.CreateConnection();
             this.model = this.connection.CreateModel();
 
-            var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessage>(
-                    (Func<IMessage, AmqpMessage>)amqpMessageBuilder.Serialize);
+            var amqpBuilderBlock = new TransformBlock<IMessage, Result<AmqpMessage>>(
+                (Func<IMessage, Result<AmqpMessage>>)((IMessage message) => {
+                    try
+                    {
+                        return new Result<AmqpMessage>(amqpMessageBuilder.Serialize(message));
+                    }
+                    catch (Exception ex)
+                    {
+                        return new Result<AmqpMessage>(ExceptionDispatchInfo.Capture(ex));
+                    }}));
 
-            var amqpSenderBlock = new ActionBlock<AmqpMessage>(
-                    (Action<AmqpMessage>)this.Send);
+            var amqpSenderBlock = new ActionBlock<Result<AmqpMessage>>(
+                    (Action<Result<AmqpMessage>>)this.Send);
 
             this.link = source.LinkTo(amqpBuilderBlock);
             amqpBuilderBlock.LinkTo(amqpSenderBlock);
@@ -35,16 +44,30 @@ namespace Kontur.Rabbitmq
             return new SubscribingTag(Guid.NewGuid().ToString(), this.CancelSending);
         }
 
-        private void Send(AmqpMessage message)
+        private void Send(Result<AmqpMessage> result)
         {
-            IBasicProperties basicProperties = this.model.CreateBasicProperties();
-            message.Properties.CopyTo(basicProperties);
+            try
+            {
+                if (!result.Success)
+                {
+                    return;
+                }
 
-            this.model.BasicPublish(
-                message.ExchangeName,
-                message.RoutingKey,
-                basicProperties,
-                message.Payload);
+                AmqpMessage message = result.Value;
+
+                IBasicProperties basicProperties = this.model.CreateBasicProperties();
+                message.Properties.CopyTo(basicProperties);
+
+                this.model.BasicPublish(
+                    message.ExchangeName,
+                    message.RoutingKey,
+                    false,
+                    basicProperties,
+                    message.Payload);
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private void CancelSending()
