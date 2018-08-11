@@ -1,20 +1,22 @@
-using System.Runtime.ExceptionServices;
 
-public class Result<T>
+namespace Kontur
 {
-    public Result(T result)
+    public class Result<TResult, TError>
     {
-        this.Value = result;
-        this.Success = true;
-    }
+        public Result(TResult result)
+        {
+            this.Value = result;
+            this.Success = true;
+        }
 
-    public Result(ExceptionDispatchInfo error)
-    {
-        this.Error = error;
-        this.Success = false;
-    }
+        public Result(TError error)
+        {
+            this.Error = error;
+            this.Success = false;
+        }
 
-    public bool Success { get; }
-    public T Value { get; }
-    public ExceptionDispatchInfo Error { get; }
+        public bool Success { get; }
+        public TResult Value { get; }
+        public TError Error { get; }
+    }
 }

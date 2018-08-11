@@ -3,6 +3,9 @@ using System.Runtime.ExceptionServices;
 using System.Threading.Tasks.Dataflow;
 using RabbitMQ.Client;
 
+using AmqpMessageResult =
+    Kontur.Result<Kontur.Rabbitmq.AmqpMessage, System.Runtime.ExceptionServices.ExceptionDispatchInfo>;
+
 namespace Kontur.Rabbitmq
 {
     internal class AmqpSender : ISubscriber
@@ -24,19 +27,19 @@ namespace Kontur.Rabbitmq
             this.connection = this.connectionFactory.CreateConnection();
             this.model = this.connection.CreateModel();
 
-            var amqpBuilderBlock = new TransformBlock<IMessage, Result<AmqpMessage>>(
-                (Func<IMessage, Result<AmqpMessage>>)((IMessage message) => {
+            var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessageResult>(
+                (Func<IMessage, AmqpMessageResult>)((IMessage message) => {
                     try
                     {
-                        return new Result<AmqpMessage>(amqpMessageBuilder.Serialize(message));
+                        return new AmqpMessageResult(amqpMessageBuilder.Serialize(message));
                     }
                     catch (Exception ex)
                     {
-                        return new Result<AmqpMessage>(ExceptionDispatchInfo.Capture(ex));
+                        return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
                     }}));
 
-            var amqpSenderBlock = new ActionBlock<Result<AmqpMessage>>(
-                    (Action<Result<AmqpMessage>>)this.Send);
+            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(
+                    (Action<AmqpMessageResult>)this.Send);
 
             this.link = source.LinkTo(amqpBuilderBlock);
             amqpBuilderBlock.LinkTo(amqpSenderBlock);
@@ -44,7 +47,7 @@ namespace Kontur.Rabbitmq
             return new SubscribingTag(Guid.NewGuid().ToString(), this.CancelSending);
         }
 
-        private void Send(Result<AmqpMessage> result)
+        private void Send(AmqpMessageResult result)
         {
             try
             {
