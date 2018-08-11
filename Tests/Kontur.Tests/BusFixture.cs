@@ -142,7 +142,7 @@ namespace Kontur.Tests
             sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
 
             const int taskCount = ((InboxCapacity + QueueCapacity + IntermediateBlocks) * 2);
-            var sents = 
+            var sents =
                 Enumerable.Range(1, taskCount)
                 .Select(i => sut.EmitAsync("hello", new Dictionary<string, string>()))
                 .ToList();
@@ -169,20 +169,20 @@ namespace Kontur.Tests
         public void CanNotFailDuringSubscriberException()
         {
             var manualEvent = new ManualResetEventSlim(false);
-            var sut = new Bus();
+            var sut = new Bus(10, new ConsoleLogService());
 
             var i = 0;
-            sut.Subscribe<string>(m => 
-            { 
-                if (i == 0) 
-                { 
+            sut.Subscribe<string>(m =>
+            {
+                if (i == 0)
+                {
                     i++;
-                    throw new Exception(); 
-                } 
-                else 
-                { 
-                    manualEvent.Set(); 
-                } 
+                    throw new Exception();
+                }
+                else
+                {
+                    manualEvent.Set();
+                }
             });
 
 
