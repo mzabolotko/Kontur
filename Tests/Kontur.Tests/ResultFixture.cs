@@ -10,7 +10,7 @@ namespace Kontur.Tests
         [Test(Description = "Can create success result.")]
         public void CanCreateSuccessResult()
         {
-            var sut = new Result<int>(10);
+            var sut = new Result<int, ExceptionDispatchInfo>(10);
 
             sut.Success.Should().BeTrue();
         }
@@ -19,7 +19,7 @@ namespace Kontur.Tests
         public void CanCreateFailureResult()
         {
 
-            var sut = new Result<int>((ExceptionDispatchInfo)null);
+            var sut = new Result<int, ExceptionDispatchInfo>((ExceptionDispatchInfo)null);
 
             sut.Success.Should().BeFalse();
         }
