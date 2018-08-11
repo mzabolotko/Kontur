@@ -15,11 +15,11 @@ namespace Kontur
         private readonly ConcurrentDictionary<Type, MessageDispatcher> dispatchers;
         private readonly ConcurrentDictionary<string, ISubscriptionTag> subscribers;
         private readonly ConcurrentDictionary<string, IPublishingTag> publishers;
-
         private readonly ExecutionDataflowBlockOptions defaultDistpatcherOptions;
         private readonly DataflowBlockOptions defaultInboxQueueOptions;
+        private readonly ILogService logService;
 
-        public Bus(int inboxCapacity = 10)
+        public Bus(int inboxCapacity = 10, ILogService logService = null)
         {
             this.inboxes = new ConcurrentDictionary<Type, MessageBuffer>();
             this.dispatchers = new ConcurrentDictionary<Type, MessageDispatcher>();
@@ -35,6 +35,8 @@ namespace Kontur
                 {
                     BoundedCapacity = 1
                 };
+            this.logService = logService ?? new NullLogService();
+            this.logService.Info("Started the bus instance with the inbox capacity equals: {0}.", inboxCapacity);
         }
 
         public ISubscriptionTag Subscribe<T>(Action<Message<T>> subscriber, int queueCapacity = 1)
@@ -45,10 +47,11 @@ namespace Kontur
 
         public ISubscriptionTag Subscribe<T>(ISubscriber subscriber, int queueCapacity = 1)
         {
+            this.logService.Info("Creating subsription to {0} with the queue capacity equals: {1}.", typeof(T), queueCapacity);
             DataflowBlockOptions queueOptions = new DataflowBlockOptions
-                {
-                    BoundedCapacity = queueCapacity
-                };
+            {
+                BoundedCapacity = queueCapacity
+            };
 
             MessageBuffer workerQueue = new MessageBuffer(queueOptions);
             ISubscriptionTag subscriberTag = subscriber.SubscribeTo(workerQueue);
@@ -65,10 +68,12 @@ namespace Kontur
         {
             if (this.inboxes.TryGetValue(typeof(T), out MessageBuffer inbox))
             {
+                this.logService.Trace("Sending the message to the inbox of {0}.", typeof(T));
                 return inbox.SendAsync(new Message<T>(payload, headers));
             }
             else
             {
+                this.logService.Trace("Sending the message is failed due to absence any subscriptions to {0}.", typeof(T));
                 return Task.FromResult(false);
             }
         }
@@ -93,6 +98,7 @@ namespace Kontur
 
         public void Unsubscribe(ISubscriptionTag tag)
         {
+            this.logService.Info("Unsubscribeing a subscription.");
             tag.Dispose();
             this.subscribers.TryRemove(tag.Id, out var subscriber);
         }
@@ -104,12 +110,14 @@ namespace Kontur
 
         public void Unregister(IPublishingTag tag)
         {
+            this.logService.Info("Unregistering a publisher.");
             tag.Dispose();
             this.publishers.TryRemove(tag.Id, out var publisher);
         }
 
         public IPublishingTag RegisterPublisher<T>(IPublisher publisher)
         {
+            this.logService.Info("Registering a publisher of {0}.", typeof(T));
             var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher());
 
             var inboxQueue = this.CreateInboxWithDispatcher<T>(dispatcher);
@@ -135,6 +143,7 @@ namespace Kontur
 
         private MessageBuffer CreateInboxWithDispatcher<T>(MessageDispatcher dispatcher)
         {
+            this.logService.Info("Registering dispatcher of {0}.", typeof(T));
             var dispatch = new MessageAction(dispatcher.Dispatch, this.defaultDistpatcherOptions);
             var inboxQueue = new MessageBuffer(this.defaultInboxQueueOptions);
 
