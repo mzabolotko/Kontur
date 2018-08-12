@@ -41,7 +41,8 @@ namespace Kontur.Rabbitmq.Tests
                 propertyBuilder,
                 messageBuilder,
                 false,
-                "test");
+                "test",
+                new LogServiceProvider());
 
             IPublishingTag tag = sut.LinkTo(targetBlock);
             tag.Id.Should().Be(consumerTag, because: "Id is equal consumer tag.");
@@ -75,7 +76,8 @@ namespace Kontur.Rabbitmq.Tests
                 propertyBuilder,
                 messageBuilder,
                 false,
-                "test");
+                "test",
+                new LogServiceProvider());
 
             sut.LinkTo(targetBlock);
             ((Action)(() => sut.LinkTo(targetBlock)))
@@ -109,7 +111,8 @@ namespace Kontur.Rabbitmq.Tests
                 propertyBuilder,
                 messageBuilder,
                 false,
-                "test");
+                "test",
+                new LogServiceProvider());
 
             using (var link = sut.LinkTo(targetBlock))
             {
@@ -145,7 +148,8 @@ namespace Kontur.Rabbitmq.Tests
                 propertyBuilder,
                 messageBuilder,
                 false,
-                "test");
+                "test",
+                new LogServiceProvider());
 
             const ulong DeliveryTag = 100;
 

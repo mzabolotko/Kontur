@@ -169,7 +169,7 @@ namespace Kontur.Tests
         public void CanNotFailDuringSubscriberException()
         {
             var manualEvent = new ManualResetEventSlim(false);
-            var sut = new Bus(10, new ConsoleLogService());
+            var sut = new Bus(10, new LogServiceProvider());
 
             var i = 0;
             sut.Subscribe<string>(m =>
