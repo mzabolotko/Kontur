@@ -27,11 +27,13 @@ namespace Kontur
             };
 
         private readonly DataflowBlockOptions defaultInboxQueueOptions;
+        private readonly ILogServiceProvider logServiceProvider;
         private readonly ILogService logService;
 
-        public Bus(int inboxCapacity = 10, ILogService logService = null)
+        public Bus(int inboxCapacity = 10, ILogServiceProvider logServiceProvider = null)
         {
-            this.logService = logService ?? new NullLogService();
+            this.logServiceProvider = logServiceProvider ?? new NullLogServiceProvider();
+            this.logService = this.logServiceProvider.GetLogServiceOf(typeof(Bus));
             this.defaultInboxQueueOptions = new DataflowBlockOptions
             {
                 BoundedCapacity = inboxCapacity
@@ -41,13 +43,13 @@ namespace Kontur
 
         public ISubscriptionTag Subscribe<T>(Action<Message<T>> subscriber, int queueCapacity = 1)
         {
-            MessageSubscriber<T> messageSubscriber = new MessageSubscriber<T>(subscriber);
+            var messageSubscriber = new MessageSubscriber<T>(subscriber, this.logServiceProvider);
             return this.Subscribe<T>(messageSubscriber, queueCapacity);
         }
 
         public ISubscriptionTag Subscribe<T>(ISubscriber subscriber, int queueCapacity = 1)
         {
-            this.logService.Info("Creating subsription to {0} with the queue capacity equals: {1}.", typeof(T), queueCapacity);
+            this.logService.Info("Creating subscription to {0} with the queue capacity equals: {1}.", typeof(T), queueCapacity);
             DataflowBlockOptions queueOptions = new DataflowBlockOptions
             {
                 BoundedCapacity = queueCapacity
@@ -130,7 +132,7 @@ namespace Kontur
 
         private ISubscriptionTag LinkDispatcherTo<T>(ITargetBlock<IMessage> target)
         {
-            var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher());
+            var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher(this.logServiceProvider));
             IDisposable dispatchDisposable = dispatcher.Subscribe<T>(target);
 
             this.CreateInboxWithDispatcher<T>(dispatcher);

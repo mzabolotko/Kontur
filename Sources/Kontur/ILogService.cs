@@ -1,3 +1,5 @@
+using System;
+
 namespace Kontur
 {
     public interface ILogService
@@ -8,5 +10,9 @@ namespace Kontur
         void Warn(string format, params object[] args);
         void Error(string format, params object[] args);
         void Fatal(string format, params object[] args);
+
+        void Warn(Exception ex, string format, params object[] args);
+        void Error(Exception ex, string format, params object[] args);
+        void Fatal(Exception ex, string format, params object[] args);
     }
 }

@@ -16,6 +16,8 @@ namespace Kontur.Rabbitmq
         private readonly IAmqpMessageBuilder amqpMessageBuilder;
         private readonly bool continueOnCapturedContext;
         private readonly string queue;
+        private readonly ILogServiceProvider logServiceProvder;
+        private readonly ILogService logService;
         private IModel channel;
         private IConnection connection;
         private IDisposable targetLink;
@@ -30,17 +32,21 @@ namespace Kontur.Rabbitmq
             IAmqpPropertyBuilder amqpPropertyBuilder,
             IAmqpMessageBuilder amqpMessageBuilder,
             bool continueOnCapturedContext,
-            string queue)
+            string queue,
+            ILogServiceProvider logServiceProvder = null)
         {
             this.connectionFactory = connectionFactory;
             this.amqpPropertyBuilder = amqpPropertyBuilder;
             this.amqpMessageBuilder = amqpMessageBuilder;
             this.continueOnCapturedContext = continueOnCapturedContext;
             this.queue = queue;
+            this.logServiceProvder = logServiceProvder ?? new NullLogServiceProvider();
+            this.logService = this.logServiceProvder.GetLogServiceOf(typeof(AsyncAmqpBasicConsumer<T>));
         }
 
         public IPublishingTag LinkTo(ITargetBlock<IMessage> target)
         {
+            this.logService.Debug("Linking to consume messages.");
             if (this.connection != null || this.channel != null || this.deserializeBlock != null)
             {
                 throw new InvalidOperationException("You could not link it more than once.");
@@ -54,11 +60,13 @@ namespace Kontur.Rabbitmq
                {
                    try
                    {
+                       this.logService.Debug("Building message of {0} to consume.", typeof(T));
                        return new MessageResult(
                            this.amqpMessageBuilder.Deserialize<T>(delivery.Message));
                    }
                    catch (Exception ex)
                    {
+                       this.logService.Warn(ex, "Buiding message of {0} to consume was failed.", typeof(T));
                        return new MessageResult(
                            new AmqpDeliveryError(delivery, ExceptionDispatchInfo.Capture(ex)));
                    }
@@ -70,10 +78,12 @@ namespace Kontur.Rabbitmq
                     {
                         try
                         {
+                            this.logService.Debug("Handling error message of {0}.", typeof(T));
                             this.channel.BasicNack(result.Error.Delivery.DeliveryTag, false, false);
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
+                            this.logService.Warn(ex, "Handling error message of {0} was failed.", typeof(T));
                         }
                     })));
 
@@ -90,6 +100,7 @@ namespace Kontur.Rabbitmq
 
         public async Task OnReceived(object channel, BasicDeliverEventArgs eventArgs)
         {
+            this.logService.Debug("Receiving message with '{0}' exchange and '{1}' routingkey.", eventArgs.Exchange, eventArgs.RoutingKey);
             var result = await this.deserializeBlock.SendAsync(
                 new AmqpDelivery(
                     new AmqpMessage(
@@ -105,6 +116,7 @@ namespace Kontur.Rabbitmq
 
         private void CancelConsuming(string consumerTag)
         {
+            this.logService.Debug("Canceling consuming messages.");
             this.targetLink.Dispose();
             this.unpackLink.Dispose();
             this.handleErrorLink.Dispose();

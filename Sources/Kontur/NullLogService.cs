@@ -12,7 +12,15 @@ namespace Kontur
         {
         }
 
+        public void Error(Exception ex, string format, params object[] args)
+        {
+        }
+
         public void Fatal(string format, params object[] args)
+        {
+        }
+
+        public void Fatal(Exception ex, string format, params object[] args)
         {
         }
 
@@ -25,6 +33,10 @@ namespace Kontur
         }
 
         public void Warn(string format, params object[] args)
+        {
+        }
+
+        public void Warn(Exception ex, string format, params object[] args)
         {
         }
     }

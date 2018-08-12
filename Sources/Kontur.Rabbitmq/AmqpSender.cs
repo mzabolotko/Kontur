@@ -12,18 +12,23 @@ namespace Kontur.Rabbitmq
     {
         private readonly IAmqpConnectionFactory connectionFactory;
         private readonly IAmqpMessageBuilder amqpMessageBuilder;
+        private readonly ILogServiceProvider logServiceProvider;
+        private readonly ILogService logService;
         private IDisposable link;
         private IModel model;
         private IConnection connection;
 
-        public AmqpSender(IAmqpConnectionFactory connectionFactory, IAmqpMessageBuilder amqpMessageBuilder)
+        public AmqpSender(IAmqpConnectionFactory connectionFactory, IAmqpMessageBuilder amqpMessageBuilder, ILogServiceProvider logServiceProvider = null)
         {
             this.connectionFactory = connectionFactory;
             this.amqpMessageBuilder = amqpMessageBuilder;
+            this.logServiceProvider = logServiceProvider ?? new NullLogServiceProvider();
+            this.logService = this.logServiceProvider.GetLogServiceOf(typeof(AmqpSender));
         }
 
         public ISubscriptionTag SubscribeTo(ISourceBlock<IMessage> source)
         {
+            this.logService.Debug("Subscribing");
             this.connection = this.connectionFactory.CreateConnection();
             this.model = this.connection.CreateModel();
 
@@ -31,10 +36,12 @@ namespace Kontur.Rabbitmq
                 (Func<IMessage, AmqpMessageResult>)((IMessage message) => {
                     try
                     {
+                        this.logService.Debug("Building message to send.");
                         return new AmqpMessageResult(amqpMessageBuilder.Serialize(message));
                     }
                     catch (Exception ex)
                     {
+                        this.logService.Warn(ex, "Building message was failed.");
                         return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
                     }}));
 
@@ -49,6 +56,7 @@ namespace Kontur.Rabbitmq
 
         private void Send(AmqpMessageResult result)
         {
+            this.logService.Debug("Sending the message.");
             try
             {
                 if (!result.Success)
@@ -61,6 +69,7 @@ namespace Kontur.Rabbitmq
                 IBasicProperties basicProperties = this.model.CreateBasicProperties();
                 message.Properties.CopyTo(basicProperties);
 
+                this.logService.Trace("Sending the message to the {0} exchange with {1} routekey.", message.ExchangeName, message.RoutingKey);
                 this.model.BasicPublish(
                     message.ExchangeName,
                     message.RoutingKey,
@@ -68,8 +77,9 @@ namespace Kontur.Rabbitmq
                     basicProperties,
                     message.Payload);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                this.logService.Warn(ex, "Sending was failed.");
             }
         }
 

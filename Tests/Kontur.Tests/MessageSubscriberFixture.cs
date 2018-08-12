@@ -14,7 +14,7 @@ namespace Kontur.Tests
         public void CanProcessSubscribedMessage()
         {
             var manualReset = new ManualResetEvent(false);
-            var sut = new MessageSubscriber<string>(m => manualReset.Set());
+            var sut = new MessageSubscriber<string>(m => manualReset.Set(), new LogServiceProvider());
 
             var input = new BufferBlock<IMessage>();
             sut.SubscribeTo(input);
@@ -28,9 +28,9 @@ namespace Kontur.Tests
         {
             var thrown = false;
             var manualReset = new ManualResetEventSlim(false);
-            var sut = new MessageSubscriber<string>(m => 
+            var sut = new MessageSubscriber<string>(m =>
             {
-                if (!thrown) 
+                if (!thrown)
                 {
                     thrown = true;
                     throw new Exception();
@@ -39,7 +39,7 @@ namespace Kontur.Tests
                 {
                     manualReset.Set();
                 }
-            });
+            }, new LogServiceProvider());
 
             var input = new BufferBlock<IMessage>();
             sut.SubscribeTo(input);
@@ -48,6 +48,6 @@ namespace Kontur.Tests
 
             manualReset.Wait(10).Should().BeTrue();
             manualReset.IsSet.Should().BeTrue();
-        }        
+        }
     }
 }

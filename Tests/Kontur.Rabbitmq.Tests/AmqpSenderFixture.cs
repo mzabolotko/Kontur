@@ -24,7 +24,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => connectionFactory.CreateConnection()).Returns(connection);
             A.CallTo(() => connection.CreateModel()).Returns(channel);
 
-            var sut = new AmqpSender(connectionFactory, messageBuilder);
+            var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 
             ISubscriptionTag tag = sut.SubscribeTo(sourceBlock);
             tag.Id.Should().NotBeNull();
@@ -60,7 +60,7 @@ namespace Kontur.Rabbitmq.Tests
                 .Then.
                 Returns(new AmqpMessage(properties, null, null, null));
 
-            var sut = new AmqpSender(connectionFactory,  messageBuilder);
+            var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 
             var input = new BufferBlock<IMessage>();
             sut.SubscribeTo(input);
@@ -100,7 +100,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => messageBuilder.Serialize(A<IMessage>._))
                 .Returns(new AmqpMessage(properties, null, null, null)).Twice();
 
-            var sut = new AmqpSender(connectionFactory,  messageBuilder);
+            var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 
             var input = new BufferBlock<IMessage>();
             sut.SubscribeTo(input);
