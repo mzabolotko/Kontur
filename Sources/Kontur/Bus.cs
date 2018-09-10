@@ -11,28 +11,29 @@ namespace Kontur
 {
     public class Bus : IPublisherRegistry, ISubscriptionRegistry
     {
-        private readonly ConcurrentDictionary<Type, MessageBuffer> inboxes = 
-            new ConcurrentDictionary<Type, MessageBuffer>();
-        private readonly ConcurrentDictionary<Type, MessageDispatcher> dispatchers = 
-            new ConcurrentDictionary<Type, MessageDispatcher>();
-        private readonly ConcurrentDictionary<string, ISubscriptionTag> subscribers = 
-            new ConcurrentDictionary<string, ISubscriptionTag>();
-        private readonly ConcurrentDictionary<string, IPublishingTag> publishers = 
-            new ConcurrentDictionary<string, IPublishingTag>();
+        private readonly ConcurrentDictionary<Type, MessageBuffer> inboxes;
+        private readonly ConcurrentDictionary<Type, MessageDispatcher> dispatchers;
+        private readonly ConcurrentDictionary<string, ISubscriptionTag> subscribers;
+        private readonly ConcurrentDictionary<string, IPublishingTag> publishers;
 
-        private readonly ExecutionDataflowBlockOptions defaultDistpatcherOptions = 
-            new ExecutionDataflowBlockOptions
-            {
-                BoundedCapacity = 1
-            };
-
+        private readonly ExecutionDataflowBlockOptions defaultDistpatcherOptions;
         private readonly DataflowBlockOptions defaultInboxQueueOptions;
 
         public Bus(int inboxCapacity = 10)
         {
+            this.inboxes = new ConcurrentDictionary<Type, MessageBuffer>();
+            this.dispatchers = new ConcurrentDictionary<Type, MessageDispatcher>();
+            this.subscribers = new ConcurrentDictionary<string, ISubscriptionTag>();
+            this.publishers = new ConcurrentDictionary<string, IPublishingTag>();
+
             this.defaultInboxQueueOptions = new DataflowBlockOptions
                 {
                     BoundedCapacity = inboxCapacity
+                };
+
+            this.defaultDistpatcherOptions = new ExecutionDataflowBlockOptions
+                {
+                    BoundedCapacity = 1
                 };
         }
 
@@ -44,7 +45,7 @@ namespace Kontur
 
         public ISubscriptionTag Subscribe<T>(ISubscriber subscriber, int queueCapacity = 1)
         {
-            DataflowBlockOptions queueOptions = new DataflowBlockOptions 
+            DataflowBlockOptions queueOptions = new DataflowBlockOptions
                 {
                     BoundedCapacity = queueCapacity
                 };
@@ -117,7 +118,7 @@ namespace Kontur
             tag = this.publishers.AddOrUpdate(tag.Id, tag, (id, t) => t);
 
             return tag;
-        }        
+        }
 
         private ISubscriptionTag LinkDispatcherTo<T>(ITargetBlock<IMessage> target)
         {
@@ -138,9 +139,9 @@ namespace Kontur
             var inboxQueue = new MessageBuffer(this.defaultInboxQueueOptions);
 
             inboxQueue.LinkTo(dispatch);
-            inboxQueue = this.inboxes.GetOrAdd(typeof(T), inboxQueue);    
+            inboxQueue = this.inboxes.GetOrAdd(typeof(T), inboxQueue);
 
-            return inboxQueue;        
+            return inboxQueue;
         }
 
 

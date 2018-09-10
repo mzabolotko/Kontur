@@ -37,7 +37,7 @@ namespace Kontur.Rabbitmq.Tests
 
             IPublishingTag publishingTag = sut.Build(registry);
 
-            A.CallTo(() => registry.RegisterPublisher<int>(A<IPublisher>.Ignored)).MustNotHaveHappened();            
+            A.CallTo(() => registry.RegisterPublisher<int>(A<IPublisher>.Ignored)).MustNotHaveHappened();
         }
 
         [Test]

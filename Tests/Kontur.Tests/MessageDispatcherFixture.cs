@@ -11,7 +11,7 @@ namespace Kontur.Tests
     internal class MessageDispatcherFixture
     {
         [Test]
-        public void CanSubscribeTypeToDispatch()
+        public void GivenDispatcherWhenSubscribingThenCreateSubscriber()
         {
             ITargetBlock<IMessage> target = A.Fake<ITargetBlock<IMessage>>();
 
@@ -23,7 +23,7 @@ namespace Kontur.Tests
         }
 
         [Test]
-        public void CanSubscribeTypeMulipleTimesToDispatch()
+        public void GivenDispatcherWhenMulitpleSubscribingWithSameTypeThenCreateMulitpleSubscribers()
         {
             ITargetBlock<IMessage> target = A.Fake<ITargetBlock<IMessage>>();
 
@@ -37,7 +37,7 @@ namespace Kontur.Tests
         }
 
         [Test]
-        public void CanUnsubscribeTypeToDispatch()
+        public void GivenSubscriberThenDisposingRemoveSubscriber()
         {
             ITargetBlock<IMessage> target = A.Fake<ITargetBlock<IMessage>>();
 
@@ -50,7 +50,7 @@ namespace Kontur.Tests
         }
 
         [Test]
-        public void CanDispatchToNullIfNotSubscribedType()
+        public void GivenEmptyListOfSubscribersThenMessageDispathToNobody()
         {
             BufferBlock<IMessage> target = new BufferBlock<IMessage>();
             IMessage message = A.Fake<IMessage>();
@@ -65,7 +65,7 @@ namespace Kontur.Tests
         }
 
         [Test]
-        public void CanDispatchToAllSubscribedType()
+        public void GivenSeveralSameTypeSubscribersThenMEssageDispatchToAll()
         {
             BufferBlock<IMessage> target = new BufferBlock<IMessage>();
             IMessage message = A.Fake<IMessage>();
@@ -81,7 +81,7 @@ namespace Kontur.Tests
         }
 
         [Test]
-        public void CanDispatchToSomeSubscribedType()
+        public void GivenSeveralDifferentTypeSubscribersThenMessageDistachToOnlyOne()
         {
             BufferBlock<IMessage> target = new BufferBlock<IMessage>();
             IMessage message = A.Fake<IMessage>();
@@ -94,11 +94,9 @@ namespace Kontur.Tests
             sut.Subscribe<string>(target);
             sut.Subscribe<double>(target);
 
-
             Task task = sut.Dispatch(message);
             task.IsCompleted.Should().BeTrue();
             target.Count.Should().Be(1);
         }
-
     }
 }

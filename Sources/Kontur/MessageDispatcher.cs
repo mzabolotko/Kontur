@@ -12,8 +12,12 @@ namespace Kontur
 {
     internal class MessageDispatcher
     {
-        ConcurrentDictionary<Type, MessageTargetDictionary> routes =
-            new ConcurrentDictionary<Type, MessageTargetDictionary>();
+        private readonly ConcurrentDictionary<Type, MessageTargetDictionary> routes;
+
+        public MessageDispatcher()
+        {
+            this.routes = new ConcurrentDictionary<Type, MessageTargetDictionary>();
+        }
 
         internal IDisposable Subscribe<T>(ITargetBlock<IMessage> target)
         {
@@ -27,7 +31,7 @@ namespace Kontur
             routes.AddOrUpdate(
                 typeof(T),
                 addValue,
-                (t, d) => 
+                (t, d) =>
                 {
                     d.AddOrUpdate(id, target, (i, nt) => nt);
                     return d;
@@ -55,15 +59,9 @@ namespace Kontur
                     target.Complete();
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         internal int GetCountSubscriberOf(Type type)
@@ -72,10 +70,8 @@ namespace Kontur
             {
                 return value.Count;
             }
-            else
-            {
-                return 0;
-            }
+
+            return 0;
         }
 
     }

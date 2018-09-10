@@ -7,7 +7,7 @@ namespace Kontur.Rabbitmq
     public class AmqpPublishingBuilder : IAmqpPublishingBuilder
     {
         private readonly IAmqpRouter router;
-        private readonly AmqpPropertyBuilder propertyBuilder;
+        private readonly IAmqpPropertyBuilder propertyBuilder;
         private readonly List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisherRegistry, IPublishingTag>> publishers;
 
         public IAmqpConnectionFactory ConnectionFactory { get; private set; }
@@ -25,7 +25,7 @@ namespace Kontur.Rabbitmq
             this.publishers = new List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisherRegistry, IPublishingTag>>();
         }
 
-        public IAmqpPublishingBuilder ReactOn<T>(string queue) where T : class 
+        public IAmqpPublishingBuilder ReactOn<T>(string queue) where T : class
         {
             this.publishers.Add(
                 (messageBuilder, connectionFactory, registry) =>
