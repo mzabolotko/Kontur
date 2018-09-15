@@ -37,7 +37,7 @@ namespace Kontur.Rabbitmq.Tests
 
             IPublishingTag publishingTag = sut.Build(registry);
 
-            A.CallTo(() => registry.RegisterPublisher(A<IPublisher>.Ignored)).MustNotHaveHappened();
+            A.CallTo(() => registry.RegisterPublisher<int>(A<IPublisher>.Ignored)).MustNotHaveHappened();
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace Kontur.Rabbitmq.Tests
             sut.ReactOn<string>("test2");
             IPublishingTag publishingTag = sut.Build(registry);
 
-            A.CallTo(() => registry.RegisterPublisher(A<IPublisher>.Ignored)).MustHaveHappenedTwiceExactly();
+            A.CallTo(() => registry.RegisterPublisher<string>(A<IPublisher>.Ignored)).MustHaveHappenedTwiceExactly();
         }
     }
 }

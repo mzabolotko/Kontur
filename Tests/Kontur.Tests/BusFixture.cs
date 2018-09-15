@@ -3,6 +3,8 @@ using System.Threading;
 using NUnit.Framework;
 using FakeItEasy;
 using System.Threading.Tasks.Dataflow;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Kontur.Tests
 {
@@ -16,7 +18,7 @@ namespace Kontur.Tests
 
             Assert.DoesNotThrowAsync((async () => await sut.EmitAsync<object>(new object(), null)), "the empty bus will purge emitted messages without subscribers");
 
-            sut.InboxMessageCount.Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
+            sut.GetInboxMessageCount<object>().Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
         }
 
         [Test(Description = "Can emit a message to the single subscriber")]
@@ -61,7 +63,7 @@ namespace Kontur.Tests
             ISubscriptionTag tag = sut.Subscribe<string>(subscriber);
 
             tag.Should().NotBeNull();
-            A.CallTo(() => subscriber.LinkTo(A<ISourceBlock<IMessage>>.Ignored)).MustHaveHappenedOnceExactly();
+            A.CallTo(() => subscriber.SubscribeTo(A<ISourceBlock<IMessage>>.Ignored)).MustHaveHappenedOnceExactly();
         }
 
         [Test(Description = "Can unsubscribe from the bus")]
@@ -80,9 +82,86 @@ namespace Kontur.Tests
             IPublisher publisher = A.Fake<IPublisher>();
             var sut = new Bus();
 
-            IPublishingTag tag = sut.RegisterPublisher(publisher);
+            IPublishingTag tag = sut.RegisterPublisher<int>(publisher);
             tag.Should().NotBeNull();
             A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).MustHaveHappenedOnceExactly();
+        }
+
+        [Test(Description = "Can check is publisher registered.")]
+        public void CanCheckIsRegistered()
+        {
+            IPublishingTag publishingTag = A.Fake<IPublishingTag>();
+            IPublisher publisher = A.Fake<IPublisher>();
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).Returns(publishingTag);
+
+            var sut = new Bus();
+            IPublishingTag tag = sut.RegisterPublisher<int>(publisher);
+
+            sut.IsRegistered(tag).Should().BeTrue();
+        }
+
+        [Test(Description = "Can unregister regestered publisher.")]
+        public void CanUnregister()
+        {
+            IPublishingTag publishingTag = A.Fake<IPublishingTag>();
+            IPublisher publisher = A.Fake<IPublisher>();
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).Returns(publishingTag);
+
+            var sut = new Bus();
+            IPublishingTag tag = sut.RegisterPublisher<int>(publisher);
+
+            sut.IsRegistered(tag).Should().BeTrue();
+            sut.Unregister(tag);
+            sut.IsRegistered(tag).Should().BeFalse();
+        }
+
+        [Test(Description = "Can get count of inbox messages for the bus with no subscribers.")]
+        public void CanGetInboxMessageCountOfNotsubscribedType()
+        {
+            const int Capacity = 10;
+            var sut = new Bus();
+
+            for (var i = 0; i < Capacity * Capacity; i++)
+            {
+                sut.EmitAsync("hello", new Dictionary<string, string>()).Wait();
+            }
+
+            sut.GetInboxMessageCount<string>().Should().Be(0);
+        }
+
+        [Test(Description = "Can block incoming messages if the inbox capacity is exceeded.")]
+        public void CanBlockIncomingMessagesWhenCapacityExceeds()
+        {
+            const int InboxCapacity = 10;
+            const int QueueCapacity = 7;
+            const int IntermediateBlocks = 2;
+            var sut = new Bus(InboxCapacity);
+            var manualResetEvent = new ManualResetEvent(false);
+            sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
+            sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
+
+            const int taskCount = ((InboxCapacity + QueueCapacity + IntermediateBlocks) * 2);
+            var sents = 
+                Enumerable.Range(1, taskCount)
+                .Select(i => sut.EmitAsync("hello", new Dictionary<string, string>()))
+                .ToList();
+
+            Thread.Sleep(50);
+
+            var completed = sents.Where(t => t.IsCompleted).Count();
+            var success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
+
+            completed.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
+            success.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
+
+            manualResetEvent.Set();
+            Thread.Sleep(50);
+
+            completed = sents.Where(t => t.IsCompleted).Count();
+            success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
+
+            completed.Should().Be(taskCount);
+            success.Should().Be(taskCount);
         }
     }
 

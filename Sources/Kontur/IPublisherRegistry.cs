@@ -2,7 +2,8 @@
 {
     public interface IPublisherRegistry
     {
-        //TODO: unregister and check
-        IPublishingTag RegisterPublisher(IPublisher publisher);
+        IPublishingTag RegisterPublisher<T>(IPublisher publisher);
+        bool IsRegistered(IPublishingTag tag);
+        void Unregister(IPublishingTag tag);
     }
 }

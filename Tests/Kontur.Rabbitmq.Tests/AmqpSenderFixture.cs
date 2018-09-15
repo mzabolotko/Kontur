@@ -23,7 +23,7 @@ namespace Kontur.Rabbitmq.Tests
 
             var sut = new AmqpSender(connectionFactory, messageBuilder);
 
-            ISubscriptionTag tag = sut.LinkTo(sourceBlock);
+            ISubscriptionTag tag = sut.SubscribeTo(sourceBlock);
             tag.Id.Should().NotBeNull();
         }
     }

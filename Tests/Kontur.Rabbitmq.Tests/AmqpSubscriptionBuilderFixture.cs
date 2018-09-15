@@ -42,7 +42,7 @@ namespace Kontur.Rabbitmq.Tests
 
             ISubscriptionTag publishingTag = sut.Build(registry);
 
-            A.CallTo(() => registry.Subscribe<string>(A<ISubscriber>.Ignored)).MustHaveHappenedTwiceExactly();
+            A.CallTo(() => registry.Subscribe<string>(A<ISubscriber>.Ignored, A<int>.Ignored)).MustHaveHappenedTwiceExactly();
         }
 
         [Test]

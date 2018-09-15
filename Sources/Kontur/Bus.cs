@@ -4,57 +4,87 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
+using MessageBuffer = System.Threading.Tasks.Dataflow.BufferBlock<Kontur.IMessage>;
+using MessageAction = System.Threading.Tasks.Dataflow.ActionBlock<Kontur.IMessage>;
+
 namespace Kontur
 {
     public class Bus : IPublisherRegistry, ISubscriptionRegistry
     {
-        private readonly BufferBlock<IMessage> inbox = new BufferBlock<IMessage>();
-        private readonly BroadcastBlock<IMessage> dispatcher = new BroadcastBlock<IMessage>(message => message);
-        private readonly ConcurrentDictionary<string, ISubscriptionTag> subscribers = new ConcurrentDictionary<string, ISubscriptionTag>();
+        private readonly ConcurrentDictionary<Type, MessageBuffer> inboxes;
+        private readonly ConcurrentDictionary<Type, MessageDispatcher> dispatchers;
+        private readonly ConcurrentDictionary<string, ISubscriptionTag> subscribers;
+        private readonly ConcurrentDictionary<string, IPublishingTag> publishers;
 
-        public Bus()
+        private readonly ExecutionDataflowBlockOptions defaultDistpatcherOptions;
+        private readonly DataflowBlockOptions defaultInboxQueueOptions;
+
+        public Bus(int inboxCapacity = 10)
         {
-            this.inbox.LinkTo(dispatcher);
-        }
+            this.inboxes = new ConcurrentDictionary<Type, MessageBuffer>();
+            this.dispatchers = new ConcurrentDictionary<Type, MessageDispatcher>();
+            this.subscribers = new ConcurrentDictionary<string, ISubscriptionTag>();
+            this.publishers = new ConcurrentDictionary<string, IPublishingTag>();
 
-        public ISubscriptionTag Subscribe<T>(Action<Message<T>> subscriber)
-        {
-            var workerQueue = new BufferBlock<IMessage>();
-            ISubscriptionTag workerQueueTag = this.LinkToDispatcher<T>(workerQueue);
-
-            var worker = new ActionBlock<IMessage>(m => subscriber(this.As<T>(m)));
-            workerQueue.LinkTo(worker);
-
-            return workerQueueTag;
-        }
-
-        public ISubscriptionTag Subscribe<T>(ISubscriber subscriber)
-        {
-            var workerQueue = new BufferBlock<IMessage>();
-
-            ISubscriptionTag workerQueueTag = this.LinkToDispatcher<T>(workerQueue);
-
-            ISubscriptionTag tag = subscriber.LinkTo(workerQueue);
-            return new CompositeSubscriptionTag(
-                Guid.NewGuid().ToString(),
-                new List<ISubscriptionTag>
+            this.defaultInboxQueueOptions = new DataflowBlockOptions
                 {
-                    tag,
-                    workerQueueTag
-                });
+                    BoundedCapacity = inboxCapacity
+                };
+
+            this.defaultDistpatcherOptions = new ExecutionDataflowBlockOptions
+                {
+                    BoundedCapacity = 1
+                };
         }
 
-        public IPublishingTag RegisterPublisher(IPublisher publisher)
+        public ISubscriptionTag Subscribe<T>(Action<Message<T>> subscriber, int queueCapacity = 1)
         {
-            return publisher.LinkTo(this.inbox);
+            MessageSubscriber<T> messageSubscriber = new MessageSubscriber<T>(subscriber);
+            return this.Subscribe<T>(messageSubscriber, queueCapacity);
         }
 
-        public async Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
+        public ISubscriptionTag Subscribe<T>(ISubscriber subscriber, int queueCapacity = 1)
         {
-            return await this.inbox.SendAsync(new Message<T>(payload, headers));
+            DataflowBlockOptions queueOptions = new DataflowBlockOptions
+                {
+                    BoundedCapacity = queueCapacity
+                };
+
+            MessageBuffer workerQueue = new MessageBuffer(queueOptions);
+            ISubscriptionTag subscriberTag = subscriber.SubscribeTo(workerQueue);
+
+            ISubscriptionTag dispatcherTag = this.LinkDispatcherTo<T>(workerQueue);
+
+            subscriberTag = new CompositeSubscriptionTag(Guid.NewGuid().ToString(), subscriberTag, dispatcherTag);
+            subscribers.AddOrUpdate(subscriberTag.Id, subscriberTag, (o, n) => n);
+
+            return subscriberTag;
         }
 
-        public int InboxMessageCount => this.inbox.Count;
+        public Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
+        {
+            if (this.inboxes.TryGetValue(typeof(T), out MessageBuffer inbox))
+            {
+                return inbox.SendAsync(new Message<T>(payload, headers));
+            }
+            else
+            {
+                return Task.FromResult(false);
+            }
+        }
+
+        public int GetInboxMessageCount<T>()
+        {
+            if (this.inboxes.TryGetValue(typeof(T), out MessageBuffer inbox))
+            {
+                return inbox.Count;
+            }
+            else
+            {
+                return 0;
+            }
+
+        }
 
         public bool IsSubscribed(ISubscriptionTag tag)
         {
@@ -64,23 +94,56 @@ namespace Kontur
         public void Unsubscribe(ISubscriptionTag tag)
         {
             tag.Dispose();
-            this.subscribers.TryRemove(tag.Id, out var worker);
+            this.subscribers.TryRemove(tag.Id, out var subscriber);
         }
 
-        private Message<T> As<T>(IMessage message)
+        public bool IsRegistered(IPublishingTag tag)
         {
-            return (message as Message<T>);
+            return publishers.ContainsKey(tag.Id);
         }
 
-        private ISubscriptionTag LinkToDispatcher<T>(ITargetBlock<IMessage> target)
+        public void Unregister(IPublishingTag tag)
         {
-            IDisposable link = this.dispatcher.LinkTo(target, message => typeof(T) == message.RouteKey);
+            tag.Dispose();
+            this.publishers.TryRemove(tag.Id, out var publisher);
+        }
 
-            string subscriptionId = Guid.NewGuid().ToString();
-            ISubscriptionTag dispatcherTag = new SubscriptionTag(subscriptionId, link);
-            dispatcherTag = subscribers.AddOrUpdate(subscriptionId, dispatcherTag, (o, n) => n);
+        public IPublishingTag RegisterPublisher<T>(IPublisher publisher)
+        {
+            var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher());
+
+            var inboxQueue = this.CreateInboxWithDispatcher<T>(dispatcher);
+
+            IPublishingTag tag = publisher.LinkTo(inboxQueue);
+            tag = this.publishers.AddOrUpdate(tag.Id, tag, (id, t) => t);
+
+            return tag;
+        }
+
+        private ISubscriptionTag LinkDispatcherTo<T>(ITargetBlock<IMessage> target)
+        {
+            var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher());
+            IDisposable dispatchDisposable = dispatcher.Subscribe<T>(target);
+
+            this.CreateInboxWithDispatcher<T>(dispatcher);
+
+            string subsriptionId = Guid.NewGuid().ToString();
+            ISubscriptionTag dispatcherTag = new SubscriptionTag(subsriptionId, dispatchDisposable);
 
             return dispatcherTag;
         }
+
+        private MessageBuffer CreateInboxWithDispatcher<T>(MessageDispatcher dispatcher)
+        {
+            var dispatch = new MessageAction(dispatcher.Dispatch, this.defaultDistpatcherOptions);
+            var inboxQueue = new MessageBuffer(this.defaultInboxQueueOptions);
+
+            inboxQueue.LinkTo(dispatch);
+            inboxQueue = this.inboxes.GetOrAdd(typeof(T), inboxQueue);
+
+            return inboxQueue;
+        }
+
+
     }
 }

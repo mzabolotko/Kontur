@@ -4,7 +4,7 @@ namespace Kontur
 {
     public interface ISubscriber
     {
-        ISubscriptionTag LinkTo(ISourceBlock<IMessage> target);
+        ISubscriptionTag SubscribeTo(ISourceBlock<IMessage> target);
     }
 
 }

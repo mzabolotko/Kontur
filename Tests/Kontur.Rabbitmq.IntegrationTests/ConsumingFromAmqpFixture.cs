@@ -5,10 +5,10 @@ using System.Threading;
 namespace Kontur.Rabbitmq.IntegrationTests
 {
     [TestFixture]
+    [Explicit("Need the started rabbitmq broker.")]
     public class ConsumingFromAmqpFixture
     {
         [Test]
-        [Ignore("not complete")]
         public void CanConsumeFromAmqp()
         {
             var sut = new Bus();

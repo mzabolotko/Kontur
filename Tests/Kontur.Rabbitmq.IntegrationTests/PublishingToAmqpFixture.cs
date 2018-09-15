@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Kontur.Rabbitmq.IntegrationTests
 {
     [TestFixture]
+    [Explicit("Need the started rabbitmq broker.")]
     public class PublishingToAmqpFixture
     {
         [Test]

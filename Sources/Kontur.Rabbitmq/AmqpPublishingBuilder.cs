@@ -8,7 +8,7 @@ namespace Kontur.Rabbitmq
     {
         private readonly IAmqpRouter router;
         private readonly IAmqpPropertyBuilder propertyBuilder;
-        private readonly List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisher>> publishers;
+        private readonly List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisherRegistry, IPublishingTag>> publishers;
 
         public IAmqpConnectionFactory ConnectionFactory { get; private set; }
         public IDictionary<string, IAmqpSerializer> Serializers { get; }
@@ -22,19 +22,20 @@ namespace Kontur.Rabbitmq
             this.router = new AmqpRouter();
             this.propertyBuilder = new AmqpPropertyBuilder();
             this.ConnectionFactory = new AsyncAmqpConnectionFactory(new Uri("amqp://"));
-            this.publishers = new List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisher>>();
+            this.publishers = new List<Func<IAmqpMessageBuilder, IAmqpConnectionFactory, IPublisherRegistry, IPublishingTag>>();
         }
 
-        public IAmqpPublishingBuilder ReactOn<T>(string queue) where T : class 
+        public IAmqpPublishingBuilder ReactOn<T>(string queue) where T : class
         {
             this.publishers.Add(
-                (messageBuilder, connectionFactory) =>
-                    new AsyncAmqpBasicConsumer<T>(
+                (messageBuilder, connectionFactory, registry) =>
+                    registry.RegisterPublisher<T>(
+                        new AsyncAmqpBasicConsumer<T>(
                         this.ConnectionFactory,
                         this.propertyBuilder,
                         messageBuilder,
                         false,
-                        queue));
+                        queue)));
 
             return this;
         }
@@ -60,8 +61,7 @@ namespace Kontur.Rabbitmq
 
             List<IPublishingTag> tags =
                 this.publishers
-                    .Select(createPublisher => createPublisher(messageBuilder, this.ConnectionFactory))
-                    .Select(registry.RegisterPublisher)
+                    .Select(createPublisher => createPublisher(messageBuilder, this.ConnectionFactory, registry))
                     .ToList();
 
             return new CompositePublishingTag(Guid.NewGuid().ToString(), tags);
