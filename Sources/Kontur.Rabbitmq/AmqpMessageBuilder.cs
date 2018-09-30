@@ -18,7 +18,7 @@ namespace Kontur.Rabbitmq
             this.router = router;
         }
 
-        public IMessage Deserialize<T>(AmqpMessage amqpMessage) where T : class
+        public virtual IMessage Deserialize<T>(AmqpMessage amqpMessage) where T : class
         {
             IAmqpSerializer amqpDeserializer = this.serializerFactory.CreateSerializer(amqpMessage.Properties.ContentType);
             T payload = amqpDeserializer.Deserialize<T>(amqpMessage);
@@ -27,7 +27,7 @@ namespace Kontur.Rabbitmq
             return new Message<T>(payload, new Dictionary<string, string>(headers));
         }
 
-        public AmqpMessage Serialize(IMessage message)
+        public virtual AmqpMessage Serialize(IMessage message)
         {
             IAmqpProperties properties = this.propertyBuilder.BuildPropertiesFromHeaders(message.Headers);
             string exchangeName = this.router.GetExchange(message);
