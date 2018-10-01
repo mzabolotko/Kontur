@@ -22,7 +22,6 @@ namespace Kontur
 
         public Bus(int inboxCapacity = 10, ILogServiceProvider logServiceProvider = null)
         {
-
             this.inboxes = new ConcurrentDictionary<Type, MessageBuffer>();
             this.dispatchers = new ConcurrentDictionary<Type, MessageDispatcher>();
             this.subscribers = new ConcurrentDictionary<string, ISubscriptionTag>();
@@ -38,7 +37,6 @@ namespace Kontur
                 {
                     BoundedCapacity = 1
                 };
-            this.logService = logService ?? new NullLogService();
             this.logService.Info("Started the bus instance with the inbox capacity equals: {0}.", inboxCapacity);
         }
 

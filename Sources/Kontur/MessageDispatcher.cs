@@ -12,17 +12,14 @@ namespace Kontur
 {
     internal class MessageDispatcher
     {
-        private readonly ConcurrentDictionary<Type, MessageTargetDictionary> routes;
 
-        public MessageDispatcher()
-        {
-            this.routes = new ConcurrentDictionary<Type, MessageTargetDictionary>();
-        }
+        private readonly ConcurrentDictionary<Type, MessageTargetDictionary> routes;
         private readonly ILogServiceProvider logServiceProvider;
         private readonly ILogService logService;
 
         public MessageDispatcher(ILogServiceProvider logServiceProvider = null)
         {
+            this.routes = new ConcurrentDictionary<Type, MessageTargetDictionary>();
             this.logServiceProvider = logServiceProvider ?? new NullLogServiceProvider();
             this.logService = this.logServiceProvider.GetLogServiceOf(typeof(MessageDispatcher));
         }
