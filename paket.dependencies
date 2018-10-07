@@ -1,7 +1,7 @@
 source https://www.nuget.org/api/v2
 
-nuget System.Threading.Tasks.Dataflow 4.8.0
-nuget RabbitMQ.Client 5.0.1 
+nuget System.Threading.Tasks.Dataflow 4.9.0
+nuget RabbitMQ.Client 5.1.0
 
 group Tests
     source https://www.nuget.org/api/v2
@@ -13,7 +13,7 @@ group Tests
 
 group RabbitMqTests
     source https://www.nuget.org/api/v2
-    nuget RabbitMQ.Client 5.0.1 
+    nuget RabbitMQ.Client 5.1.0 
     nuget Microsoft.NET.Test.Sdk 15.6.0-preview-20180109-01
     nuget FluentAssertions 5.0.0
     nuget NUnit 3.9.0
