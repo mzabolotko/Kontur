@@ -8,7 +8,7 @@ namespace Kontur
 {
     internal class MessageSubscriber<T> : ISubscriber, IDisposable
     {
-        private readonly ExecutionDataflowBlockOptions defaultConsumerOptions = 
+        private readonly ExecutionDataflowBlockOptions defaultConsumerOptions =
             new ExecutionDataflowBlockOptions
             {
                 BoundedCapacity = 1
@@ -17,11 +17,15 @@ namespace Kontur
         private readonly MessageAction worker;
 
         private readonly Action<Message<T>> action;
+        private readonly ILogServiceProvider logServiceProvider;
+        private readonly ILogService logService;
         private bool disposed = false;
 
-        public MessageSubscriber(Action<Message<T>> action)
+        public MessageSubscriber(Action<Message<T>> action, ILogServiceProvider logServiceProvider)
         {
             this.action = action;
+            this.logServiceProvider = logServiceProvider;
+            this.logService = this.logServiceProvider.GetLogServiceOf(typeof(MessageSubscriber<T>));
             this.worker = new MessageAction((Action<IMessage>)this.OnMessage, this.defaultConsumerOptions);
         }
 
@@ -35,10 +39,12 @@ namespace Kontur
         {
             try
             {
-                action(this.As(message));            
+                this.logService.Debug("Processing the message.");
+                action(this.As(message));
             }
-            catch (System.Exception)
+            catch (System.Exception ex)
             {
+                this.logService.Error("Processing the message was failed.", ex);
             }
         }
 
