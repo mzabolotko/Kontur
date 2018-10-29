@@ -142,12 +142,12 @@ namespace Kontur.Tests
             sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
 
             const int taskCount = ((InboxCapacity + QueueCapacity + IntermediateBlocks) * 2);
-            var sents = 
+            var sents =
                 Enumerable.Range(1, taskCount)
                 .Select(i => sut.EmitAsync("hello", new Dictionary<string, string>()))
-                .ToList();
+                .ToArray();
 
-            Thread.Sleep(50);
+            Thread.Sleep(500);
 
             var completed = sents.Where(t => t.IsCompleted).Count();
             var success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
@@ -156,7 +156,7 @@ namespace Kontur.Tests
             success.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
 
             manualResetEvent.Set();
-            Thread.Sleep(50);
+            Thread.Sleep(500);
 
             completed = sents.Where(t => t.IsCompleted).Count();
             success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
@@ -172,17 +172,17 @@ namespace Kontur.Tests
             var sut = new Bus();
 
             var i = 0;
-            sut.Subscribe<string>(m => 
-            { 
-                if (i == 0) 
-                { 
+            sut.Subscribe<string>(m =>
+            {
+                if (i == 0)
+                {
                     i++;
-                    throw new Exception(); 
-                } 
-                else 
-                { 
-                    manualEvent.Set(); 
-                } 
+                    throw new Exception();
+                }
+                else
+                {
+                    manualEvent.Set();
+                }
             });
 
 
