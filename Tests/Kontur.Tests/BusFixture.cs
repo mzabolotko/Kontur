@@ -145,9 +145,9 @@ namespace Kontur.Tests
             var sents =
                 Enumerable.Range(1, taskCount)
                 .Select(i => sut.EmitAsync("hello", new Dictionary<string, string>()))
-                .ToList();
+                .ToArray();
 
-            Thread.Sleep(50);
+            Thread.Sleep(500);
 
             var completed = sents.Where(t => t.IsCompleted).Count();
             var success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
@@ -156,7 +156,7 @@ namespace Kontur.Tests
             success.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
 
             manualResetEvent.Set();
-            Thread.Sleep(50);
+            Thread.Sleep(500);
 
             completed = sents.Where(t => t.IsCompleted).Count();
             success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
