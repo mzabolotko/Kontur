@@ -130,7 +130,6 @@ namespace Kontur.Tests
             sut.GetInboxMessageCount<string>().Should().Be(0);
         }
 
-        //[Ignore("Temporary disable to discover another errors.")]
         [Test(Description = "Can block incoming messages if the inbox capacity is exceeded.")]
         public void CanBlockIncomingMessagesWhenCapacityExceeds()
         {
@@ -154,11 +153,8 @@ namespace Kontur.Tests
             var success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
 
 
-            string r = string.Join(",", sents.Select(s => $"{s.IsCompleted} {(s.IsCompleted ? s.Result.ToString() : "N/A")}"));
-
-            r.Should().Be("");
             completed.Should().BeLessOrEqualTo(InboxCapacity + QueueCapacity + IntermediateBlocks);
-            success.Should().Be(taskCount - completed);
+            success.Should().Be(completed);
 
             manualResetEvent.Set();
             Thread.Sleep(50);
