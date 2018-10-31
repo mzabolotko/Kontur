@@ -107,7 +107,7 @@ namespace Kontur.Rabbitmq.Tests
             input.Post(new Message<string>("hello", new Dictionary<string, string>()));
             input.Post(new Message<string>("hello", new Dictionary<string, string>()));
 
-            manualReset.Wait(10).Should().BeTrue();
+            manualReset.Wait(100).Should().BeTrue();
             manualReset.IsSet.Should().BeTrue();
         }
     }
