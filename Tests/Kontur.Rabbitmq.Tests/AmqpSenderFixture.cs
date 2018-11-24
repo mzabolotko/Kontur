@@ -4,7 +4,7 @@ using NUnit.Framework;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks.Dataflow;
 
 namespace Kontur.Rabbitmq.Tests
@@ -31,11 +31,9 @@ namespace Kontur.Rabbitmq.Tests
         }
 
 
-        [Test(Description = "Can send message after serialization exception.")]
+        [Test(Description = "Can send message after transform exception.")]
         public void CanSendMessageWithSerializationException()
         {
-            var manualReset = new ManualResetEventSlim(false);
-
             IAmqpConnectionFactory connectionFactory = A.Fake<IAmqpConnectionFactory>();
             AmqpMessageBuilder messageBuilder = A.Fake<AmqpMessageBuilder>();
             ISourceBlock<IMessage> sourceBlock = A.Fake<ISourceBlock<IMessage>>();
@@ -45,14 +43,6 @@ namespace Kontur.Rabbitmq.Tests
 
             A.CallTo(() => connectionFactory.CreateConnection()).Returns(connection);
             A.CallTo(() => connection.CreateModel()).Returns(channel);
-            A.CallTo(() => channel.CreateBasicProperties()).Returns(null);
-            A.CallTo(() => channel.BasicPublish(
-                                A<string>._,
-                                A<string>._,
-                                A<bool>._,
-                                A<IBasicProperties>._,
-                                A<byte[]>._))
-                .Invokes(() => manualReset.Set());
 
             A.CallTo(() => messageBuilder.Serialize(A<IMessage>._))
                 .Throws<Exception>()
@@ -61,21 +51,14 @@ namespace Kontur.Rabbitmq.Tests
                 Returns(new AmqpMessage(properties, null, null, null));
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
-
-            var input = new BufferBlock<IMessage>();
-            sut.SubscribeTo(input);
-            input.Post(new Message<string>("hello", new Dictionary<string, string>()));
-            input.Post(new Message<string>("hello", new Dictionary<string, string>()));
-
-            manualReset.Wait(10).Should().BeTrue();
-            manualReset.IsSet.Should().BeTrue();
+            IMessage message = new Message<string>("hello", new Dictionary<string, string>());
+            Action action = () => sut.Transform(message);
+            action.Should().NotThrow("because the AmqpSender should catch all exception to prevent from destroying the DataFlow chain.");
         }
 
         [Test(Description = "Can send message after sent exception.")]
         public void CanSendMessageWithSentException()
         {
-            var manualReset = new ManualResetEventSlim(false);
-
             IAmqpConnectionFactory connectionFactory = A.Fake<IAmqpConnectionFactory>();
             AmqpMessageBuilder messageBuilder = A.Fake<AmqpMessageBuilder>();
             ISourceBlock<IMessage> sourceBlock = A.Fake<ISourceBlock<IMessage>>();
@@ -93,22 +76,19 @@ namespace Kontur.Rabbitmq.Tests
                                 A<IBasicProperties>._,
                                 A<byte[]>._))
                 .Throws<Exception>()
-                .Once()
-                .Then
-                .Invokes(() => manualReset.Set());
+                .Once();
 
             A.CallTo(() => messageBuilder.Serialize(A<IMessage>._))
                 .Returns(new AmqpMessage(properties, null, null, null)).Twice();
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 
-            var input = new BufferBlock<IMessage>();
-            sut.SubscribeTo(input);
-            input.Post(new Message<string>("hello", new Dictionary<string, string>()));
-            input.Post(new Message<string>("hello", new Dictionary<string, string>()));
+            Result<AmqpMessage, ExceptionDispatchInfo> result =
+                new Result<AmqpMessage, ExceptionDispatchInfo>(
+                         new AmqpMessage(new AmqpProperties(), string.Empty, string.Empty, new byte[0]));
 
-            manualReset.Wait(100).Should().BeTrue();
-            manualReset.IsSet.Should().BeTrue();
+            Action action = () => sut.Send(result);
+            action.Should().NotThrow("because the AmqpSender should catch all exceptions to prevent from destroying of the DataFlow chain.");
         }
     }
 }
