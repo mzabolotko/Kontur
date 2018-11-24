@@ -33,17 +33,7 @@ namespace Kontur.Rabbitmq
             this.model = this.connection.CreateModel();
 
             var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessageResult>(
-                (Func<IMessage, AmqpMessageResult>)((IMessage message) => {
-                    try
-                    {
-                        this.logService.Debug("Building message to send.");
-                        return new AmqpMessageResult(amqpMessageBuilder.Serialize(message));
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logService.Warn(ex, "Building message was failed.");
-                        return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
-                    }}));
+                (Func<IMessage, AmqpMessageResult>)this.Transform);
 
             var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(
                     (Action<AmqpMessageResult>)this.Send);
@@ -54,11 +44,25 @@ namespace Kontur.Rabbitmq
             return new SubscribingTag(Guid.NewGuid().ToString(), this.CancelSending);
         }
 
-        private void Send(AmqpMessageResult result)
+        public AmqpMessageResult Transform(IMessage message)
         {
-            this.logService.Debug("Sending the message.");
             try
             {
+                this.logService.Debug("Building message to send.");
+                return new AmqpMessageResult(amqpMessageBuilder.Serialize(message));
+            }
+            catch (Exception ex)
+            {
+                this.logService.Warn(ex, "Building message was failed.");
+                return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
+            }
+        }
+
+        public void Send(AmqpMessageResult result)
+        {
+            try
+            {
+                this.logService.Debug("Sending the message.");
                 if (!result.Success)
                 {
                     return;
