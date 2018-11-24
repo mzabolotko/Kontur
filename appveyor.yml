@@ -4,6 +4,6 @@ install:
   - cinst fake -pre
 
 build_script:
-  - cmd: fake run build
+  - cmd: fake run build.fsx
 
 test: off
