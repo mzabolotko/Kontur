@@ -9,7 +9,7 @@ using MessageResult = Kontur.Result<Kontur.IMessage, Kontur.Rabbitmq.AmqpDeliver
 
 namespace Kontur.Rabbitmq
 {
-    class AsyncAmqpBasicConsumer<T> : IPublisher where T : class
+    internal class AsyncAmqpBasicConsumer<T> : IPublisher where T : class
     {
         private readonly IAmqpConnectionFactory connectionFactory;
         private readonly IAmqpPropertyBuilder amqpPropertyBuilder;
@@ -55,59 +55,57 @@ namespace Kontur.Rabbitmq
             this.connection = this.connectionFactory.CreateConnection();
             this.channel = this.connection.CreateModel();
 
-            this.deserializeBlock = new TransformBlock<AmqpDelivery, MessageResult>(
-                (Func<AmqpDelivery, MessageResult>)((delivery) =>
-               {
-                   try
-                   {
-                       this.logService.Debug("Building message of {0} to consume.", typeof(T));
-                       return new MessageResult(
-                           this.amqpMessageBuilder.Deserialize<T>(delivery.Message));
-                   }
-                   catch (Exception ex)
-                   {
-                       this.logService.Warn(ex, "Buiding message of {0} to consume was failed.", typeof(T));
-                       return new MessageResult(
-                           new AmqpDeliveryError(delivery, ExceptionDispatchInfo.Capture(ex)));
-                   }
-               }));
-            this.unpackBlock = new TransformBlock<MessageResult, IMessage>(
-                (Func<MessageResult, IMessage>)(result => result.Value));
-            this.handleErrorBlock = new ActionBlock<MessageResult>(
-                ((Action<MessageResult>)(result =>
-                    {
-                        try
-                        {
-                            this.logService.Debug("Handling error message of {0}.", typeof(T));
-                            this.channel.BasicNack(result.Error.Delivery.DeliveryTag, false, false);
-                        }
-                        catch (Exception ex)
-                        {
-                            this.logService.Warn(ex, "Handling error message of {0} was failed.", typeof(T));
-                        }
-                    })));
+            this.deserializeBlock = new TransformBlock<AmqpDelivery, MessageResult>(delivery =>
+            {
+                try
+                {
+                    this.logService.Debug("Building message of {0} to consume.", typeof(T));
+                    return new MessageResult(this.amqpMessageBuilder.Deserialize<T>(delivery.Message));
+                }
+                catch (Exception ex)
+                {
+                    this.logService.Warn(ex, "Buiding message of {0} to consume was failed.", typeof(T));
+                    return new MessageResult(new AmqpDeliveryError(delivery, ExceptionDispatchInfo.Capture(ex)));
+                }
+            });
+            this.unpackBlock = new TransformBlock<MessageResult, IMessage>(result => result.Value);
+            this.handleErrorBlock = new ActionBlock<MessageResult>(result =>
+            {
+                try
+                {
+                    this.logService.Debug("Handling error message of {0}.", typeof(T));
+                    this.channel.BasicNack(result.Error.Delivery.DeliveryTag, false, false);
+                }
+                catch (Exception ex)
+                {
+                    this.logService.Warn(ex, "Handling error message of {0} was failed.", typeof(T));
+                }
+            });
 
             this.unpackLink = this.deserializeBlock.LinkTo(this.unpackBlock, result => result.Success);
             this.handleErrorLink = this.deserializeBlock.LinkTo(this.handleErrorBlock, result => !result.Success);
             this.targetLink = this.unpackBlock.LinkTo(target);
 
-            var consumer = new AsyncEventingBasicConsumer(channel);
-            consumer.Received += OnReceived;
-            string consumerTag = channel.BasicConsume(this.queue, false, consumer);
+            var consumer = new AsyncEventingBasicConsumer(this.channel);
+            consumer.Received += this.OnReceived;
+            string consumerTag = this.channel.BasicConsume(this.queue, false, consumer);
 
-            return new PublishingTag(consumerTag, CancelConsuming);
+            return new PublishingTag(consumerTag, this.CancelConsuming);
         }
 
         public async Task OnReceived(object channel, BasicDeliverEventArgs eventArgs)
         {
             this.logService.Debug("Receiving message with '{0}' exchange and '{1}' routingkey.", eventArgs.Exchange, eventArgs.RoutingKey);
+            var tcs = new TaskCompletionSource<bool>();
+
             var result = await this.deserializeBlock.SendAsync(
                 new AmqpDelivery(
                     new AmqpMessage(
-                        amqpPropertyBuilder.BuildPropertiesFromProperties(eventArgs.BasicProperties),
+                        this.amqpPropertyBuilder.BuildPropertiesFromProperties(eventArgs.BasicProperties),
                         eventArgs.Exchange,
                         eventArgs.RoutingKey,
-                        eventArgs.Body),
+                        eventArgs.Body,
+                        tcs),
                     eventArgs.DeliveryTag)
             ).ConfigureAwait(this.continueOnCapturedContext);
 

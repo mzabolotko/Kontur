@@ -10,6 +10,7 @@ namespace Kontur.Rabbitmq
         }
 
         public AmqpMessage Message { private set; get; }
+
         public ulong DeliveryTag { private set; get; }
     }
 }

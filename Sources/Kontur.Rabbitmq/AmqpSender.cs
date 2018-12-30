@@ -33,7 +33,8 @@ namespace Kontur.Rabbitmq
             this.model = this.connection.CreateModel();
 
             var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessageResult>(
-                (Func<IMessage, AmqpMessageResult>)((IMessage message) => {
+                (IMessage message) =>
+                {
                     try
                     {
                         this.logService.Debug("Building message to send.");
@@ -43,10 +44,10 @@ namespace Kontur.Rabbitmq
                     {
                         this.logService.Warn(ex, "Building message was failed.");
                         return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
-                    }}));
+                    }
+                });
 
-            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(
-                    (Action<AmqpMessageResult>)this.Send);
+            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>((Action<AmqpMessageResult>)this.Send);
 
             this.link = source.LinkTo(amqpBuilderBlock);
             amqpBuilderBlock.LinkTo(amqpSenderBlock);

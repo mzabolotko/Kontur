@@ -42,6 +42,7 @@ namespace Kontur
                     d.AddOrUpdate(id, target, (i, nt) => nt);
                     return d;
                 });
+
             return new MessageDispatcherTag(id, i => this.Unsubscribe<T>(i));
         }
 

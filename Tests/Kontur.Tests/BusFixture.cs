@@ -6,6 +6,7 @@ using System.Threading.Tasks.Dataflow;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace Kontur.Tests
 {
@@ -150,7 +151,7 @@ namespace Kontur.Tests
             Thread.Sleep(50);
 
             var completed = sents.Where(t => t.IsCompleted).Count();
-            var success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
+            var success = sents.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
 
             completed.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
             success.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
@@ -159,7 +160,7 @@ namespace Kontur.Tests
             Thread.Sleep(50);
 
             completed = sents.Where(t => t.IsCompleted).Count();
-            success = sents.Where(t => t.IsCompleted).Where(t => t.Result).Count();
+            success = sents.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
 
             completed.Should().Be(taskCount);
             success.Should().Be(taskCount);

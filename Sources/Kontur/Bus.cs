@@ -65,12 +65,15 @@ namespace Kontur
             return subscriberTag;
         }
 
-        public Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
+        public Task EmitAsync<T>(T payload, IDictionary<string, string> headers)
         {
             if (this.inboxes.TryGetValue(typeof(T), out MessageBuffer inbox))
             {
                 this.logService.Trace("Sending the message to the inbox of {0}.", typeof(T));
-                return inbox.SendAsync(new Message<T>(payload, headers));
+                var tcs = new TaskCompletionSource<bool>();
+                inbox.SendAsync(new Message<T>(payload, headers, tcs));
+
+                return tcs.Task;
             }
             else
             {
