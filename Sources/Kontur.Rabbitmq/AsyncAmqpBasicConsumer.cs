@@ -2,6 +2,7 @@
 using RabbitMQ.Client.Events;
 using System;
 using System.Runtime.ExceptionServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -96,18 +97,25 @@ namespace Kontur.Rabbitmq
         public async Task OnReceived(object channel, BasicDeliverEventArgs eventArgs)
         {
             this.logService.Debug("Receiving message with '{0}' exchange and '{1}' routingkey.", eventArgs.Exchange, eventArgs.RoutingKey);
-            var tcs = new TaskCompletionSource<bool>();
 
-            var result = await this.deserializeBlock.SendAsync(
-                new AmqpDelivery(
-                    new AmqpMessage(
-                        this.amqpPropertyBuilder.BuildPropertiesFromProperties(eventArgs.BasicProperties),
-                        eventArgs.Exchange,
-                        eventArgs.RoutingKey,
-                        eventArgs.Body,
-                        tcs),
-                    eventArgs.DeliveryTag)
-            ).ConfigureAwait(this.continueOnCapturedContext);
+            var message = new AmqpMessage(
+                this.amqpPropertyBuilder.BuildPropertiesFromProperties(eventArgs.BasicProperties),
+                eventArgs.Exchange,
+                eventArgs.RoutingKey,
+                eventArgs.Body,
+                new TaskCompletionSource<bool>());
+
+            var sentSucceed = await this.deserializeBlock.SendAsync(new AmqpDelivery(message, eventArgs.DeliveryTag))
+                .ConfigureAwait(this.continueOnCapturedContext);
+
+            if (sentSucceed)
+            {
+                message.Task.SetResult(true);
+            }
+            else
+            {
+                message.Task.SetException(new SerializationException());
+            }
 
             this.channel.BasicAck(eventArgs.DeliveryTag, false);
         }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Kontur.Tests
 {
@@ -30,7 +31,7 @@ namespace Kontur.Tests
             var sut = new Bus();
 
             sut.Subscribe<DoSomethingCommand>(message => { manualEvent.Set(); });
-            sut.EmitAsync(new DoSomethingCommand(), null).Wait();
+            sut.EmitAsync(new DoSomethingCommand(), null);
 
             manualEvent.Wait(10).Should().BeTrue(because: "if the bus emits a message then the subscriber should be called");
         }
@@ -43,7 +44,7 @@ namespace Kontur.Tests
 
             sut.Subscribe<DoSomethingCommand>(message => { count.Signal(); });
             sut.Subscribe<DoSomethingCommand>(message => { count.Signal(); });
-            sut.EmitAsync(new DoSomethingCommand(), null).Wait();
+            sut.EmitAsync(new DoSomethingCommand(), null);
 
             count.Wait(10).Should().BeTrue("if the bus emits a message then all subscribers should be called");
         }
@@ -135,32 +136,33 @@ namespace Kontur.Tests
         public void CanBlockIncomingMessagesWhenCapacityExceeds()
         {
             const int InboxCapacity = 10;
+            var sut = new Bus(InboxCapacity, a);
+
             const int QueueCapacity = 7;
-            const int IntermediateBlocks = 2;
-            var sut = new Bus(InboxCapacity);
             var manualResetEvent = new ManualResetEvent(false);
             sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
             sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
 
-            const int taskCount = ((InboxCapacity + QueueCapacity + IntermediateBlocks) * 2);
-            var sents =
+            const int AllBlocksCapacity = InboxCapacity + QueueCapacity + 2;
+            const int taskCount = AllBlocksCapacity * 2;
+            var sendings =
                 Enumerable.Range(1, taskCount)
-                .Select(i => sut.EmitAsync("hello", new Dictionary<string, string>()))
+                .Select(i => sut.EmitAsync(new Message("hello", new Dictionary<string, string>())))
                 .ToList();
 
             Thread.Sleep(50);
 
-            var completed = sents.Where(t => t.IsCompleted).Count();
-            var success = sents.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
+            var completed = sendings.Where(t => t.IsCompleted).Count();
+            var success = sendings.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
 
-            completed.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
-            success.Should().Be(InboxCapacity + QueueCapacity + IntermediateBlocks);
+            completed.Should().Be(AllBlocksCapacity);
+            success.Should().Be(AllBlocksCapacity);
 
             manualResetEvent.Set();
             Thread.Sleep(50);
 
-            completed = sents.Where(t => t.IsCompleted).Count();
-            success = sents.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
+            completed = sendings.Where(t => t.IsCompleted).Count();
+            success = sendings.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
 
             completed.Should().Be(taskCount);
             success.Should().Be(taskCount);
@@ -186,9 +188,8 @@ namespace Kontur.Tests
                 }
             });
 
-
-            sut.EmitAsync("hello", new Dictionary<string, string>()).Wait();
-            sut.EmitAsync("hello", new Dictionary<string, string>()).Wait();
+            sut.EmitAsync("hello", new Dictionary<string, string>());
+            sut.EmitAsync("hello", new Dictionary<string, string>());
 
             manualEvent.Wait(10).Should().BeTrue();
             manualEvent.IsSet.Should().BeTrue();
@@ -197,6 +198,5 @@ namespace Kontur.Tests
 
     internal class DoSomethingCommand
     {
-
     }
 }

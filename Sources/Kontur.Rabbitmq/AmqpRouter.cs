@@ -5,9 +5,12 @@ namespace Kontur.Rabbitmq
 {
     internal class AmqpRouter : IAmqpRouter
     {
-        private readonly ConcurrentDictionary<Type, Tuple<Func<IMessage, string>, Func<IMessage, string>>> resolvers = 
-            new ConcurrentDictionary<Type, Tuple<Func<IMessage, string>, Func<IMessage, string>>>();
+        private readonly ConcurrentDictionary<Type, Tuple<Func<IMessage, string>, Func<IMessage, string>>> resolvers;
 
+        public AmqpRouter()
+        {
+            this.resolvers = new ConcurrentDictionary<Type, Tuple<Func<IMessage, string>, Func<IMessage, string>>>();
+        }
 
         public string GetExchange(IMessage message)
         {
@@ -37,5 +40,4 @@ namespace Kontur.Rabbitmq
                 (type, add) => Tuple.Create(exchangeResolve, routingKeyResolve));
         }
     }
-
 }

@@ -9,7 +9,7 @@ namespace Kontur
         public Message(T payload, IDictionary<string, string> headers, TaskCompletionSource<bool> tcs)
             : this(payload, headers)
         {
-            this.Task = tcs;
+            this.TaskCompletionSource = tcs;
         }
 
         public Message(T payload, IDictionary<string, string> headers)
@@ -27,6 +27,6 @@ namespace Kontur
 
         public T Payload { get; }
 
-        public TaskCompletionSource<bool> Task { get; }
+        public TaskCompletionSource<bool> TaskCompletionSource { get; }
     }
 }

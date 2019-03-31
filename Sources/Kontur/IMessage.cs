@@ -12,6 +12,6 @@ namespace Kontur
 
         object Payload { get; }
 
-        TaskCompletionSource<bool> Task { get; }
+        TaskCompletionSource<bool> TaskCompletionSource { get; }
     }
 }

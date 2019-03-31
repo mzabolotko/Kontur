@@ -36,7 +36,7 @@ namespace Kontur.Rabbitmq
             IAmqpSerializer amqpSerializer = this.serializerFactory.CreateSerializer(message);
             byte[] payload = amqpSerializer.Serialize(message);
 
-            return new AmqpMessage(properties, exchangeName, routingKey, payload, message.Task);
+            return new AmqpMessage(properties, exchangeName, routingKey, payload, message.TaskCompletionSource);
         }
     }
 }

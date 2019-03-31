@@ -30,7 +30,6 @@ namespace Kontur.Rabbitmq.Tests
             tag.Id.Should().NotBeNull();
         }
 
-
         [Test(Description = "Can send message after serialization exception.")]
         public void CanSendMessageWithSerializationException()
         {
@@ -57,8 +56,8 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => messageBuilder.Serialize(A<IMessage>._))
                 .Throws<Exception>()
                 .Once()
-                .Then.
-                Returns(new AmqpMessage(properties, null, null, null));
+                .Then
+                .Returns(new AmqpMessage(properties, null, null, null));
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 

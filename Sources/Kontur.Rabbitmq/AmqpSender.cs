@@ -58,14 +58,14 @@ namespace Kontur.Rabbitmq
         private void Send(AmqpMessageResult result)
         {
             this.logService.Debug("Sending the message.");
+            AmqpMessage message = result.Value;
+
             try
             {
                 if (!result.Success)
                 {
                     return;
                 }
-
-                AmqpMessage message = result.Value;
 
                 IBasicProperties basicProperties = this.model.CreateBasicProperties();
                 message.Properties.CopyTo(basicProperties);
@@ -77,10 +77,13 @@ namespace Kontur.Rabbitmq
                     false,
                     basicProperties,
                     message.Payload);
+
+                message.Task.SetResult(true);
             }
             catch (Exception ex)
             {
                 this.logService.Warn(ex, "Sending was failed.");
+                message.Task.SetException(ex);
             }
         }
 
