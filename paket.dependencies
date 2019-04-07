@@ -1,22 +1,39 @@
 source https://www.nuget.org/api/v2
 
 nuget System.Threading.Tasks.Dataflow 4.8.0
-nuget RabbitMQ.Client 5.0.1 
+nuget RabbitMQ.Client 5.0.1
 
 group Tests
     source https://www.nuget.org/api/v2
+
     nuget Microsoft.NET.Test.Sdk 15.6.0-preview-20180109-01
     nuget FluentAssertions 5.0.0
     nuget NUnit 3.9.0
+    nuget NUnit.ConsoleRunner 3.9.0
     nuget NUnit3TestAdapter 3.9.0
     nuget FakeItEasy 4.5.0
 
 group RabbitMqTests
     source https://www.nuget.org/api/v2
-    nuget RabbitMQ.Client 5.0.1 
+
+    nuget RabbitMQ.Client 5.0.1
     nuget Microsoft.NET.Test.Sdk 15.6.0-preview-20180109-01
     nuget FluentAssertions 5.0.0
     nuget NUnit 3.9.0
     nuget NUnit3TestAdapter 3.9.0
     nuget FakeItEasy 4.5.0
     nuget Newtonsoft.Json 11.0.2
+
+// [ FAKE GROUP ]
+group Build
+    source https://www.nuget.org/api/v2
+
+    nuget Fake.Core.Target 5.4.0
+    nuget Fake.Core.ReleaseNotes 5.4.0
+    nuget Fake.DotNet.Cli 5.4.0
+    nuget Fake.DotNet.MSBuild 5.4.0
+    nuget Fake.DotNet.Testing.NUnit 5.4.0
+    nuget Fake.DotNet.AssemblyInfoFile 5.4.0
+    nuget Fake.DotNet.Paket 5.4.0
+    nuget Fake.IO.FileSystem 5.4.0
+    nuget Fake.Tools.Git 5.4.0

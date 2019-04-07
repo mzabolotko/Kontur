@@ -33,22 +33,10 @@ namespace Kontur.Rabbitmq
             this.model = this.connection.CreateModel();
 
             var amqpBuilderBlock = new TransformBlock<IMessage, AmqpMessageResult>(
-                (IMessage message) =>
-                {
-                    try
-                    {
-                        this.logService.Debug("Building message to send.");
-                        return new AmqpMessageResult(amqpMessageBuilder.Serialize(message));
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logService.Warn(ex, "Building message was failed.");
-                        message.TaskCompletionSource.SetResult(false);
-                        return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
-                    }
-                });
+                (Func<IMessage, AmqpMessageResult>)this.Transform);
 
-            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(this.Send);
+            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(
+                    (Action<AmqpMessageResult>)this.Send);
 
             this.link = source.LinkTo(amqpBuilderBlock);
             amqpBuilderBlock.LinkTo(amqpSenderBlock);
@@ -56,13 +44,30 @@ namespace Kontur.Rabbitmq
             return new SubscribingTag(Guid.NewGuid().ToString(), this.CancelSending);
         }
 
-        private void Send(AmqpMessageResult result)
+        public AmqpMessageResult Transform(IMessage message)
         {
-            this.logService.Debug("Sending the message.");
+            try
+            {
+                this.logService.Debug("Building message to send.");
+                return new AmqpMessageResult(amqpMessageBuilder.Serialize(message));
+            }
+            catch (Exception ex)
+            {
+                this.logService.Warn(ex, "Building message was failed.");
+                        message.TaskCompletionSource.SetResult(false);
+                return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
+                    }
+                });
+            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(this.Send);
+        }
+
+        public void Send(AmqpMessageResult result)
+        {
             AmqpMessage message = result.Value;
 
             try
             {
+                this.logService.Debug("Sending the message.");
                 if (!result.Success)
                 {
                     return;

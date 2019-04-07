@@ -132,6 +132,7 @@ namespace Kontur.Tests
             sut.GetInboxMessageCount<string>().Should().Be(0);
         }
 
+            success.Should().Be(completed);
         [Test(Description = "Can not fail if the subscriber throws an exception.")]
         public void CanNotFailDuringSubscriberException()
         {

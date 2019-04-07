@@ -34,7 +34,7 @@ namespace Kontur.Rabbitmq.Tests
             tag.Id.Should().NotBeNull();
         }
 
-        [Test(Description = "Can send message after serialization exception.")]
+        [Test(Description = "Can send message after transform exception.")]
         public async Task CanSendMessageWithSerializationException()
         {
             // Arrange
@@ -42,7 +42,6 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => channel.CreateBasicProperties())
                 .Returns(null);
 
-            A.CallTo(() => channel.BasicPublish(
                     A<string>._,
                     A<string>._,
                     A<bool>._,
@@ -66,9 +65,8 @@ namespace Kontur.Rabbitmq.Tests
                 .Returns(new AmqpMessage(properties, null, null, new byte[1], tasks[1]));
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
-            var input = new BufferBlock<IMessage>();
-            sut.SubscribeTo(input);
-
+            Action action = () => sut.Transform(message);
+            action.Should().NotThrow("because the AmqpSender should catch all exception to prevent from destroying the DataFlow chain.");
             // Act
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[0]));
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[1]));
@@ -114,8 +112,8 @@ namespace Kontur.Rabbitmq.Tests
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 
-            var input = new BufferBlock<IMessage>();
-            sut.SubscribeTo(input);
+            Result<AmqpMessage, ExceptionDispatchInfo> result =
+                new Result<AmqpMessage, ExceptionDispatchInfo>(
 
             // Act
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[0]));
