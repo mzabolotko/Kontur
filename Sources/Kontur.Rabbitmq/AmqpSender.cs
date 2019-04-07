@@ -43,11 +43,12 @@ namespace Kontur.Rabbitmq
                     catch (Exception ex)
                     {
                         this.logService.Warn(ex, "Building message was failed.");
+                        message.TaskCompletionSource.SetResult(false);
                         return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
                     }
                 });
 
-            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>((Action<AmqpMessageResult>)this.Send);
+            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(this.Send);
 
             this.link = source.LinkTo(amqpBuilderBlock);
             amqpBuilderBlock.LinkTo(amqpSenderBlock);

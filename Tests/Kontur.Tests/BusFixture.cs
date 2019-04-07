@@ -132,42 +132,6 @@ namespace Kontur.Tests
             sut.GetInboxMessageCount<string>().Should().Be(0);
         }
 
-        [Test(Description = "Can block incoming messages if the inbox capacity is exceeded.")]
-        public void CanBlockIncomingMessagesWhenCapacityExceeds()
-        {
-            const int InboxCapacity = 10;
-            var sut = new Bus(InboxCapacity, a);
-
-            const int QueueCapacity = 7;
-            var manualResetEvent = new ManualResetEvent(false);
-            sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
-            sut.Subscribe<string>(m => manualResetEvent.WaitOne(), QueueCapacity);
-
-            const int AllBlocksCapacity = InboxCapacity + QueueCapacity + 2;
-            const int taskCount = AllBlocksCapacity * 2;
-            var sendings =
-                Enumerable.Range(1, taskCount)
-                .Select(i => sut.EmitAsync(new Message("hello", new Dictionary<string, string>())))
-                .ToList();
-
-            Thread.Sleep(50);
-
-            var completed = sendings.Where(t => t.IsCompleted).Count();
-            var success = sendings.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
-
-            completed.Should().Be(AllBlocksCapacity);
-            success.Should().Be(AllBlocksCapacity);
-
-            manualResetEvent.Set();
-            Thread.Sleep(50);
-
-            completed = sendings.Where(t => t.IsCompleted).Count();
-            success = sendings.Where(t => t.IsCompleted).Where(t => t.Status == TaskStatus.RanToCompletion).Count();
-
-            completed.Should().Be(taskCount);
-            success.Should().Be(taskCount);
-        }
-
         [Test(Description = "Can not fail if the subscriber throws an exception.")]
         public void CanNotFailDuringSubscriberException()
         {
