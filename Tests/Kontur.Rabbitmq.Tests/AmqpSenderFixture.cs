@@ -4,6 +4,7 @@ using NUnit.Framework;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -42,6 +43,7 @@ namespace Kontur.Rabbitmq.Tests
             A.CallTo(() => channel.CreateBasicProperties())
                 .Returns(null);
 
+            A.CallTo(() => channel.BasicPublish(
                     A<string>._,
                     A<string>._,
                     A<bool>._,
@@ -65,8 +67,9 @@ namespace Kontur.Rabbitmq.Tests
                 .Returns(new AmqpMessage(properties, null, null, new byte[1], tasks[1]));
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
-            Action action = () => sut.Transform(message);
-            action.Should().NotThrow("because the AmqpSender should catch all exception to prevent from destroying the DataFlow chain.");
+            var input = new BufferBlock<IMessage>();
+            sut.SubscribeTo(input);
+
             // Act
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[0]));
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[1]));
@@ -112,8 +115,8 @@ namespace Kontur.Rabbitmq.Tests
 
             var sut = new AmqpSender(connectionFactory, messageBuilder, new LogServiceProvider());
 
-            Result<AmqpMessage, ExceptionDispatchInfo> result =
-                new Result<AmqpMessage, ExceptionDispatchInfo>(
+            var input = new BufferBlock<IMessage>();
+            sut.SubscribeTo(input);
 
             // Act
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[0]));

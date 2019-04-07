@@ -54,11 +54,9 @@ namespace Kontur.Rabbitmq
             catch (Exception ex)
             {
                 this.logService.Warn(ex, "Building message was failed.");
-                        message.TaskCompletionSource.SetResult(false);
+                message.TaskCompletionSource.SetResult(false);
                 return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
-                    }
-                });
-            var amqpSenderBlock = new ActionBlock<AmqpMessageResult>(this.Send);
+            }
         }
 
         public void Send(AmqpMessageResult result)
