@@ -7,4 +7,4 @@ IF NOT EXIST "%TOOL_PATH%\fake.exe" (
 @echo on
 
 dotnet restore
-"%TOOL_PATH%/fake.exe" %*
+"%TOOL_PATH%/fake.exe" run build.fsx %*

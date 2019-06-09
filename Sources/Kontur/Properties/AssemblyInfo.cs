@@ -8,7 +8,7 @@ using System.Reflection;
 [assembly: AssemblyVersion("0.2.0")]
 [assembly: AssemblyFileVersion("0.2.0")]
 [assembly: AssemblyCompany("Mikhail Zabolotko Alex Zaitzev")]
-[assembly: AssemblyCopyright("(c) Focus Technologies, 2018")]
+[assembly: AssemblyCopyright("(c) Focus Technologies, 2019")]
 [assembly: AssemblyConfiguration("Release")]
 namespace System {
     internal static class AssemblyVersionInformation {
@@ -18,7 +18,7 @@ namespace System {
         internal const System.String AssemblyVersion = "0.2.0";
         internal const System.String AssemblyFileVersion = "0.2.0";
         internal const System.String AssemblyCompany = "Mikhail Zabolotko Alex Zaitzev";
-        internal const System.String AssemblyCopyright = "(c) Focus Technologies, 2018";
+        internal const System.String AssemblyCopyright = "(c) Focus Technologies, 2019";
         internal const System.String AssemblyConfiguration = "Release";
     }
 }
