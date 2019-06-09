@@ -54,12 +54,15 @@ namespace Kontur.Rabbitmq
             catch (Exception ex)
             {
                 this.logService.Warn(ex, "Building message was failed.");
+                message.TaskCompletionSource.SetResult(false);
                 return new AmqpMessageResult(ExceptionDispatchInfo.Capture(ex));
             }
         }
 
         public void Send(AmqpMessageResult result)
         {
+            AmqpMessage message = result.Value;
+
             try
             {
                 this.logService.Debug("Sending the message.");
@@ -67,8 +70,6 @@ namespace Kontur.Rabbitmq
                 {
                     return;
                 }
-
-                AmqpMessage message = result.Value;
 
                 IBasicProperties basicProperties = this.model.CreateBasicProperties();
                 message.Properties.CopyTo(basicProperties);
@@ -80,10 +81,13 @@ namespace Kontur.Rabbitmq
                     false,
                     basicProperties,
                     message.Payload);
+
+                message.Task.SetResult(true);
             }
             catch (Exception ex)
             {
                 this.logService.Warn(ex, "Sending was failed.");
+                message.Task.SetException(ex);
             }
         }
 

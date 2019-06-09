@@ -6,11 +6,17 @@ namespace Kontur.Rabbitmq
     internal class AmqpProperties : IAmqpProperties
     {
         public string ReplyTo { get; set; }
+
         public bool Persistent { get; set; }
+
         public string MessageId { get; set; }
+
         public IDictionary<string, string> Headers { get; set; }
+
         public string CorrelationId { get; set; }
+
         public string ContentType { get; set; }
+
         public string ContentEncoding { get; set; }
 
         public void CopyTo(IBasicProperties basicProperties)

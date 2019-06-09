@@ -24,7 +24,7 @@ namespace Kontur.Rabbitmq
             T payload = amqpDeserializer.Deserialize<T>(amqpMessage);
             IDictionary<string, string> headers = this.propertyBuilder.BuildHeadersFromProperties(amqpMessage.Properties);
 
-            return new Message<T>(payload, new Dictionary<string, string>(headers));
+            return new Message<T>(payload, new Dictionary<string, string>(headers), amqpMessage.Task);
         }
 
         public virtual AmqpMessage Serialize(IMessage message)
@@ -36,7 +36,7 @@ namespace Kontur.Rabbitmq
             IAmqpSerializer amqpSerializer = this.serializerFactory.CreateSerializer(message);
             byte[] payload = amqpSerializer.Serialize(message);
 
-            return new AmqpMessage(properties, exchangeName, routingKey, payload);
+            return new AmqpMessage(properties, exchangeName, routingKey, payload, message.TaskCompletionSource);
         }
     }
 }

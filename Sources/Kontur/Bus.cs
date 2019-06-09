@@ -20,6 +20,11 @@ namespace Kontur
         private readonly ILogServiceProvider logServiceProvider;
         private readonly ILogService logService;
 
+        public Bus(int inboxCapacity, ConcurrentDictionary<Type, MessageBuffer> buffer) : this(inboxCapacity)
+        {
+            this.inboxes = buffer;
+        }
+
         public Bus(int inboxCapacity = 10, ILogServiceProvider logServiceProvider = null)
         {
             this.inboxes = new ConcurrentDictionary<Type, MessageBuffer>();
@@ -65,12 +70,22 @@ namespace Kontur
             return subscriberTag;
         }
 
-        public Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
+        public Task EmitAsync<T>(T payload, IDictionary<string, string> headers)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            var message = new Message<T>(payload, headers, tcs);
+
+            return EmitAsync<T>(message);
+        }
+
+        public Task EmitAsync<T>(IMessage message)
         {
             if (this.inboxes.TryGetValue(typeof(T), out MessageBuffer inbox))
             {
                 this.logService.Trace("Sending the message to the inbox of {0}.", typeof(T));
-                return inbox.SendAsync(new Message<T>(payload, headers));
+                inbox.SendAsync(message);
+
+                return message.TaskCompletionSource.Task;
             }
             else
             {
@@ -89,7 +104,6 @@ namespace Kontur
             {
                 return 0;
             }
-
         }
 
         public bool IsSubscribed(ISubscriptionTag tag)
@@ -153,7 +167,5 @@ namespace Kontur
 
             return inboxQueue;
         }
-
-
     }
 }

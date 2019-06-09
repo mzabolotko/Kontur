@@ -12,7 +12,6 @@ namespace Kontur
 {
     internal class MessageDispatcher
     {
-
         private readonly ConcurrentDictionary<Type, MessageTargetDictionary> routes;
         private readonly ILogServiceProvider logServiceProvider;
         private readonly ILogService logService;
@@ -42,6 +41,7 @@ namespace Kontur
                     d.AddOrUpdate(id, target, (i, nt) => nt);
                     return d;
                 });
+
             return new MessageDispatcherTag(id, i => this.Unsubscribe<T>(i));
         }
 
@@ -82,6 +82,5 @@ namespace Kontur
 
             return 0;
         }
-
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Kontur
 {
@@ -10,5 +11,7 @@ namespace Kontur
         IReadOnlyDictionary<string, string> Headers { get; }
 
         object Payload { get; }
+
+        TaskCompletionSource<bool> TaskCompletionSource { get; }
     }
 }

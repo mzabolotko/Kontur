@@ -32,6 +32,7 @@ namespace Kontur.Rabbitmq
                 Persistent,
                 ReplyTo
             };
+
             properties.Headers =
                 headers
                 .Where(kv => !presetHeaders.Contains(kv.Key))

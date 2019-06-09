@@ -11,6 +11,7 @@ namespace Kontur.Rabbitmq
         }
 
         public AmqpDelivery Delivery { private set; get; }
+
         public ExceptionDispatchInfo Exception { private set; get; }
     }
 }

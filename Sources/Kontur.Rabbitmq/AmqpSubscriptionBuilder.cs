@@ -7,10 +7,13 @@ namespace Kontur.Rabbitmq
     public class AmqpSubscriptionBuilder : IAmqpSubscriptionBuilder
     {
         private readonly IAmqpRouter router;
+
         private readonly IAmqpPropertyBuilder propertyBuilder;
+
         private readonly IList<Func<IAmqpConnectionFactory, IAmqpMessageBuilder, ISubscriptionRegistry, ISubscriptionTag>> subscriptions;
 
         public IAmqpConnectionFactory ConnectionFactory { get; private set; }
+
         public IDictionary<string, IAmqpSerializer> Serializers { get; }
 
         public AmqpSubscriptionBuilder()
