@@ -10,7 +10,8 @@ using MessageTargetDictionary = System.Collections.Concurrent.ConcurrentDictiona
 
 namespace Kontur
 {
-    internal class MessageDispatcher
+    /// TODO: change from public to internal
+    public class MessageDispatcher
     {
         private readonly ConcurrentDictionary<Type, MessageTargetDictionary> routes;
         private readonly ILogServiceProvider logServiceProvider;

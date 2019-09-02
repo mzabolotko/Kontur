@@ -7,16 +7,16 @@ namespace Kontur
     public class Message<T> : IMessage
     {
         public Message(T payload, IDictionary<string, string> headers, TaskCompletionSource<bool> tcs)
-            : this(payload, headers)
         {
+            this.RouteKey = typeof(T);
+            this.Payload = payload;
+            this.Headers = (IReadOnlyDictionary<string, string>)headers;
             this.TaskCompletionSource = tcs;
         }
 
         public Message(T payload, IDictionary<string, string> headers)
+            : this(payload, headers, new TaskCompletionSource<bool>())
         {
-            this.RouteKey = typeof(T);
-            this.Payload = payload;
-            this.Headers = (IReadOnlyDictionary<string, string>) headers;
         }
 
         public Type RouteKey { get; }

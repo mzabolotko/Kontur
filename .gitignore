@@ -18,6 +18,7 @@ bld/
 
 .vs/
 .vscode/
+.ionide
 
 paket-files/
 packages/

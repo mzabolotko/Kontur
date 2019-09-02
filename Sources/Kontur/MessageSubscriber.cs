@@ -1,49 +1,44 @@
 using System;
 using System.Threading.Tasks.Dataflow;
 
-using MessageAction = System.Threading.Tasks.Dataflow.ActionBlock<Kontur.IMessage>;
-
 namespace Kontur
 {
     internal class MessageSubscriber<T> : ISubscriber, IDisposable
     {
-        private readonly ExecutionDataflowBlockOptions defaultConsumerOptions =
-            new ExecutionDataflowBlockOptions
-            {
-                BoundedCapacity = 1
-            };
-
-        private readonly MessageAction worker;
-
-        private readonly Action<Message<T>> action;
         private readonly ILogServiceProvider logServiceProvider;
+        private readonly IMessageAction worker;
+        private readonly Action<Message<T>> action;
         private readonly ILogService logService;
         private bool disposed = false;
 
-        public MessageSubscriber(Action<Message<T>> action, ILogServiceProvider logServiceProvider)
+        public MessageSubscriber(Action<Message<T>> action, IMessageActionFactory messageActionFactory, ILogServiceProvider logServiceProvider)
         {
             this.action = action;
-            this.logServiceProvider = logServiceProvider;
+            this.worker = messageActionFactory.Create((Action<IMessage>)this.OnMessage);
+            this.logServiceProvider = logServiceProvider ?? new NullLogServiceProvider();
             this.logService = this.logServiceProvider.GetLogServiceOf(typeof(MessageSubscriber<T>));
-            this.worker = new MessageAction((Action<IMessage>)this.OnMessage, this.defaultConsumerOptions);
+            this.logService.Debug("Created the message subscriber.");
         }
 
         public ISubscriptionTag SubscribeTo(ISourceBlock<IMessage> target)
         {
-            target.LinkTo(this.worker);
+            target.LinkTo(this.worker.AsTarget);
             return new SubscriptionTag(Guid.NewGuid().ToString(), this);
         }
 
         private void OnMessage(IMessage message)
         {
+            Message<T> m = this.As(message);
             try
             {
                 this.logService.Debug("Processing the message.");
-                action(this.As(message));
+                action(m);
+                m.TaskCompletionSource.TrySetResult(true);
             }
             catch (System.Exception ex)
             {
                 this.logService.Error("Processing the message was failed.", ex);
+                m.TaskCompletionSource.TrySetResult(true);
             }
         }
 

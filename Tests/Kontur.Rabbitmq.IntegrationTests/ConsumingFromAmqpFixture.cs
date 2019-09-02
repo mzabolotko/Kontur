@@ -39,7 +39,7 @@ namespace Kontur.Rabbitmq.IntegrationTests
 
     internal class JsonNetDeserializer : IAmqpSerializer
     {
-        public T Deserialize<T>(AmqpMessage amqpMessage) where T : class 
+        public T Deserialize<T>(AmqpMessage amqpMessage) where T : class
         {
             string payload = System.Text.Encoding.UTF8.GetString(amqpMessage.Payload);
             return JsonConvert.DeserializeObject<T>(payload);

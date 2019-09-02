@@ -4,10 +4,7 @@ using NUnit.Framework;
 using FakeItEasy;
 using System.Threading.Tasks.Dataflow;
 using System.Collections.Generic;
-using System.Linq;
 using System;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace Kontur.Tests
 {
@@ -24,10 +21,25 @@ namespace Kontur.Tests
             sut.GetInboxMessageCount<object>().Should().Be(0, because: "the empty bus will purge emitted messages without subscribers");
         }
 
+        [Test(Description = "Can emit a message to the inbox")]
+        public void CanEmitToInbox()
+        {
+            IInbox inbox = A.Fake<IInbox>();
+
+            var sut = new Bus(inbox, null, null, new NUnitLogProvider());
+
+            DoSomethingCommand payload = new DoSomethingCommand();
+            sut.EmitAsync(payload, null).Wait();
+
+            A.CallTo(() => inbox.EmitAsync<DoSomethingCommand>(A<IMessage>.That.Matches(c => c.Payload == payload)))
+                .MustHaveHappenedOnceExactly();
+        }
+
         [Test(Description = "Can emit a message to the single subscriber")]
+        [Ignore("Move to integration tests")]
         public void CanEmitToSingleSubscriber()
         {
-            var manualEvent = new ManualResetEventSlim(false);
+            ManualResetEventSlim manualEvent = new ManualResetEventSlim(false);
             var sut = new Bus();
 
             sut.Subscribe<DoSomethingCommand>(message => { manualEvent.Set(); });
@@ -136,14 +148,25 @@ namespace Kontur.Tests
         public void CanNotFailDuringSubscriberException()
         {
             var manualEvent = new ManualResetEventSlim(false);
-            var sut = new Bus(10, new LogServiceProvider());
+            var messageBufferFactory = new MessageBufferFactory(10);
+            var messageActionFactory = new MessageActionFactory();
+            var logServiceProvider = new NUnitLogProvider();
+            var logService = logServiceProvider.GetLogServiceOf(this.GetType());
+            var sut = new Bus(
+                        new Inbox(messageBufferFactory, messageActionFactory, logServiceProvider),
+                        new Outbox(messageBufferFactory, messageActionFactory, logServiceProvider),
+                        new Exchange(logServiceProvider),
+                        logServiceProvider);
 
             var i = 0;
             sut.Subscribe<string>(m =>
             {
+                logService.Trace("Message - {0}, index - {1}.", m.Payload, i);
                 if (i == 0)
                 {
+
                     i++;
+                    logService.Trace("Throw exception.");
                     throw new Exception();
                 }
                 else
@@ -152,10 +175,10 @@ namespace Kontur.Tests
                 }
             });
 
-            sut.EmitAsync("hello", new Dictionary<string, string>());
-            sut.EmitAsync("hello", new Dictionary<string, string>());
+            sut.EmitAsync("first", new Dictionary<string, string>()).Wait();
+            sut.EmitAsync("second", new Dictionary<string, string>()).Wait();
 
-            manualEvent.Wait(10).Should().BeTrue();
+            manualEvent.Wait();
             manualEvent.IsSet.Should().BeTrue();
         }
     }

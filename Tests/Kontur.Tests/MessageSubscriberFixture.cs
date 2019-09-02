@@ -14,7 +14,8 @@ namespace Kontur.Tests
         public void CanProcessSubscribedMessage()
         {
             var manualReset = new ManualResetEvent(false);
-            var sut = new MessageSubscriber<string>(m => manualReset.Set(), new LogServiceProvider());
+            var messageActionFactory = new MessageActionFactory();
+            var sut = new MessageSubscriber<string>(m => { manualReset.Set(); }, messageActionFactory, new NUnitLogProvider());
 
             var input = new BufferBlock<IMessage>();
             sut.SubscribeTo(input);
@@ -28,25 +29,31 @@ namespace Kontur.Tests
         {
             var thrown = false;
             var manualReset = new ManualResetEventSlim(false);
+            var messageActionFactory = new MessageActionFactory();
+            var logServiceProvider = new NUnitLogProvider();
+            ILogService logService = logServiceProvider.GetLogServiceOf(this.GetType());
             var sut = new MessageSubscriber<string>(m =>
             {
+                logService.Trace("Message - {0}, exception thrown - {1}.", m.Payload, thrown);
                 if (!thrown)
                 {
                     thrown = true;
+                    logService.Trace("Throw exception.");
                     throw new Exception();
                 }
                 else
                 {
                     manualReset.Set();
                 }
-            }, new LogServiceProvider());
+            }, messageActionFactory, logServiceProvider);
 
             var input = new BufferBlock<IMessage>();
             sut.SubscribeTo(input);
-            input.Post(new Message<string>("hello", new Dictionary<string, string>()));
-            input.Post(new Message<string>("hello", new Dictionary<string, string>()));
 
-            manualReset.Wait(10).Should().BeTrue();
+            input.Post(new Message<string>("first", new Dictionary<string, string>()));
+            input.Post(new Message<string>("second", new Dictionary<string, string>()));
+
+            manualReset.Wait(100).Should().BeTrue();
             manualReset.IsSet.Should().BeTrue();
         }
     }
