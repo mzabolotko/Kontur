@@ -18,7 +18,8 @@ bld/
 
 .vs/
 .vscode/
-.ionide
+.ionide/
+.fake/
 
 paket-files/
 packages/

@@ -12,7 +12,7 @@ group Tests
     nuget NUnit 3.9.0
     nuget NUnit.ConsoleRunner 3.9.0
     nuget NUnit3TestAdapter 3.9.0
-    nuget FakeItEasy 4.5.0
+    nuget FakeItEasy 5.1.2
 
 group RabbitMqTests
     source https://www.nuget.org/api/v2
@@ -22,7 +22,7 @@ group RabbitMqTests
     nuget FluentAssertions 5.0.0
     nuget NUnit 3.9.0
     nuget NUnit3TestAdapter 3.9.0
-    nuget FakeItEasy 4.5.0
+    nuget FakeItEasy 5.1.2
     nuget Newtonsoft.Json 11.0.2
 
 // [ FAKE GROUP ]
