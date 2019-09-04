@@ -4,3 +4,5 @@
     NUnit3TestAdapter
     FluentAssertions
     FakeItEasy
+    AltCover
+    FSharp.Core

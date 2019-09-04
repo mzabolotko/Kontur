@@ -20,10 +20,14 @@ let release = ReleaseNotes.parse (File.ReadLines "RELEASE_NOTES.md")
 
 let buildDir = __SOURCE_DIRECTORY__ @@ @"\artifacts\build"
 let testDir = __SOURCE_DIRECTORY__ @@ @"\artifacts\tests"
-
+let altcoverDir = __SOURCE_DIRECTORY__ @@ @"\artifacts\altcover"
+let tempDirs =
+    !! "Sources/**/bin"
+    ++ "Tests/**/bin"
 
 Target.create "Clean" (fun _ ->
     Shell.cleanDirs [ buildDir; testDir ]
+    tempDirs |> Seq.iter Directory.delete
 )
 
 Target.create "GenerateAssemblyInfo" (fun _ ->
@@ -55,12 +59,21 @@ Target.create "GenerateAssemblyInfo" (fun _ ->
 Target.create "BuildApp" (fun _ ->
     !! "Kontur.sln"
         |> MSBuild.runRelease id null "Build"
-        |> Trace.logItems "AppBuild-Output: "
+        |> ignore
 )
 
 Target.create "KonturTest" (fun _ ->
+    let parameters (p : DotNet.TestOptions) =
+        { p with
+            MSBuildParams =
+                { MSBuild.CliArguments.Create() with
+                    Properties =
+                        [ ("AltCover", "true");
+                          ("AltCoverXmlReport", altcoverDir @@ "altcover.xml");
+                          ("AltCoverAssemblyExcludeFilter", "NUnit3.TestAdapter|Kontur.Tests") ] } }
     @"Tests\Kontur.Tests\Kontur.Tests.csproj"
-    |> DotNet.test id
+    |> DotNet.test parameters
+    Shell.Exec ("dotnet", __SOURCE_DIRECTORY__ @@ @".\packages\build\ReportGenerator\tools\netcoreapp2.1\ReportGenerator.dll -reports:.\artifacts\altcover\*.xml -targetdir:.\artifacts\reports", __SOURCE_DIRECTORY__) |> ignore
 )
 
 Target.create "KonturRabbitMqTest" (fun _ ->

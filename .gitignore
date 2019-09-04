@@ -20,6 +20,7 @@ bld/
 .vscode/
 .ionide/
 .fake/
+artifacts/
 
 paket-files/
 packages/

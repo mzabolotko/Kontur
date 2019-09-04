@@ -13,6 +13,8 @@ group Tests
     nuget NUnit.ConsoleRunner 3.9.0
     nuget NUnit3TestAdapter 3.9.0
     nuget FakeItEasy 5.1.2
+    nuget FSharp.Core 4.3.4
+    nuget AltCover 6.1.708
 
 group RabbitMqTests
     source https://www.nuget.org/api/v2
@@ -29,12 +31,13 @@ group RabbitMqTests
 group Build
     source https://www.nuget.org/api/v2
 
-    nuget Fake.Core.Target 5.4.0
-    nuget Fake.Core.ReleaseNotes 5.4.0
-    nuget Fake.DotNet.Cli 5.4.0
-    nuget Fake.DotNet.MSBuild 5.4.0
-    nuget Fake.DotNet.Testing.NUnit 5.4.0
-    nuget Fake.DotNet.AssemblyInfoFile 5.4.0
-    nuget Fake.DotNet.Paket 5.4.0
-    nuget Fake.IO.FileSystem 5.4.0
-    nuget Fake.Tools.Git 5.4.0
+    nuget Fake.Core.Target 5.16.0
+    nuget Fake.Core.ReleaseNotes 5.16.0
+    nuget Fake.DotNet.Cli 5.16.0
+    nuget Fake.DotNet.MSBuild 5.16.0
+    nuget Fake.DotNet.Testing.NUnit 5.16.0
+    nuget Fake.DotNet.AssemblyInfoFile 5.16.0
+    nuget Fake.DotNet.Paket 5.16.0
+    nuget Fake.IO.FileSystem 5.16.0
+    nuget Fake.Tools.Git 5.16.0
+    nuget ReportGenerator 4.2.17
