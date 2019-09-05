@@ -10,9 +10,16 @@ namespace Kontur.Rabbitmq.IntegrationTests
         [Test]
         public void CanPublishToAmqp()
         {
-            var sut = new Bus();
+            var messageBufferFactory = new MessageBufferFactory(10);
+            var messageActionFactory = new MessageActionFactory();
+            var nlogServiceProvider = new NUnitLogProvider();
 
-            using (var subsciption = sut.ToRabbitMq(cfg => 
+            var inbox = new Inbox(messageBufferFactory, messageActionFactory, nlogServiceProvider);
+            var outbox = new Outbox(messageBufferFactory, messageActionFactory, nlogServiceProvider);
+            var exchange = new Exchange(nlogServiceProvider);
+            var sut = new Bus(inbox, outbox, exchange, nlogServiceProvider);
+
+            using (var subsciption = sut.ToRabbitMq(cfg =>
             {
                 cfg.RouteTo<string>("test", string.Empty);
 

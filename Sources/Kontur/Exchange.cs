@@ -8,21 +8,20 @@ namespace Kontur
     {
         private readonly ILogServiceProvider logServiceProvider;
         private readonly ILogService logService;
-        private readonly ConcurrentDictionary<Type, MessageDispatcher> dispatchers;
+        private readonly ConcurrentDictionary<Type, MessageDispatcher> dispatchers = new ConcurrentDictionary<Type, MessageDispatcher>();
 
-        public Exchange(ILogServiceProvider logServiceProvider = null)
+        public Exchange(ILogServiceProvider logServiceProvider)
         {
-            this.logServiceProvider = logServiceProvider ?? new NullLogServiceProvider();
+            this.logServiceProvider = logServiceProvider;
             this.logService = this.logServiceProvider.GetLogServiceOf(typeof(Exchange));
-            this.dispatchers = new ConcurrentDictionary<Type, MessageDispatcher>();
             this.logService.Debug("Created an exchange.");
         }
 
-        public ISubscriptionTag BindSubscriber<T>(IInbox inbox, ITargetBlock<IMessage> target)
+        public ISubscriptionTag BindSubscriberQueue<T>(IInbox inbox, ITargetBlock<IMessage> queue)
         {
-            this.logService.Debug("Binding a subscriber to the inbox.");
+            this.logService.Debug("Binding a subscriber queue to the inbox.");
             var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher(this.logServiceProvider));
-            IDisposable dispatchDisposable = dispatcher.Subscribe<T>(target);
+            IDisposable dispatchDisposable = dispatcher.Subscribe<T>(queue);
 
             string subsriptionId = Guid.NewGuid().ToString();
             ISubscriptionTag dispatcherTag = new SubscriptionTag(subsriptionId, dispatchDisposable);
@@ -35,7 +34,7 @@ namespace Kontur
         public IMessageBuffer BindPublisher<T>(IInbox inbox)
         {
             this.logService.Debug("Binding a publisher to the inbox.");
-            var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher());
+            var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher(this.logServiceProvider));
 
             var inboxQueue = inbox.CreateInboxWithDispatcher<T>(dispatcher);
 
