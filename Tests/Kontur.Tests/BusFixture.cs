@@ -249,10 +249,11 @@ namespace Kontur.Tests
             var messageBufferFactory = new MessageBufferFactory(10);
             var messageActionFactory = new MessageActionFactory();
             var logServiceProvider = new NUnitLogProvider();
+            var subscriberFactory = new SubscriberFactory(messageActionFactory, logServiceProvider);
             var logService = logServiceProvider.GetLogServiceOf(this.GetType());
             var sut = new Bus(
                         new Inbox(messageBufferFactory, messageActionFactory, logServiceProvider),
-                        new Outbox(messageBufferFactory, messageActionFactory, logServiceProvider),
+                        new Outbox(messageBufferFactory, subscriberFactory, logServiceProvider),
                         new Exchange(logServiceProvider),
                         logServiceProvider);
 
