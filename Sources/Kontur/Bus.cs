@@ -48,7 +48,7 @@ namespace Kontur
             this.outbox.Unsubscribe(tag);
         }
 
-        public Task EmitAsync<T>(T payload, IDictionary<string, string> headers)
+        public Task<bool> EmitAsync<T>(T payload, IDictionary<string, string> headers)
         {
             var tcs = new TaskCompletionSource<bool>();
             var message = new Message<T>(payload, headers, tcs);

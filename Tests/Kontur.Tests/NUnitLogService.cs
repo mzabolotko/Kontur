@@ -64,7 +64,5 @@ namespace Kontur.Tests
             string methodName = TestContext.CurrentContext.Test.Name;
             TestContext.Progress.Write($"[{methodName}] ({DateTime.Now.ToString("HH:mm:ss.fff")}) [{level.PadRight(5, ' ')}] {this.type.ToString().PadRight(15, ' ')} - {message}");
         }
-
-
     }
 }

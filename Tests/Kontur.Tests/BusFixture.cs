@@ -5,6 +5,7 @@ using FakeItEasy;
 using System.Threading.Tasks.Dataflow;
 using System.Collections.Generic;
 using System;
+using System.Threading.Tasks;
 
 namespace Kontur.Tests
 {
@@ -272,11 +273,13 @@ namespace Kontur.Tests
                 }
             });
 
-            sut.EmitAsync("first", new Dictionary<string, string>()).Wait();
-            sut.EmitAsync("second", new Dictionary<string, string>()).Wait();
+            Task<bool> firstTask = sut.EmitAsync("first", new Dictionary<string, string>()); //.Wait();
+            Task<bool> secondTask = sut.EmitAsync("second", new Dictionary<string, string>()); //.Wait();
 
             manualEvent.Wait();
             manualEvent.IsSet.Should().BeTrue();
+            firstTask.Result.Should().BeTrue(because: "The subscriber exists");
+            secondTask.Result.Should().BeTrue(because: "The subscriber exists");
         }
     }
 

@@ -26,7 +26,7 @@ namespace Kontur
             string subsriptionId = Guid.NewGuid().ToString();
             ISubscriptionTag dispatcherTag = new SubscriptionTag(subsriptionId, dispatchDisposable);
 
-            inbox.CreateInboxWithDispatcher<T>(dispatcher);
+            inbox.CreateInboxWithDispatcher<T>(dispatcher.Dispatch);
 
             return dispatcherTag;
         }
@@ -36,7 +36,7 @@ namespace Kontur
             this.logService.Debug("Binding a publisher to the inbox.");
             var dispatcher = this.dispatchers.GetOrAdd(typeof(T), new MessageDispatcher(this.logServiceProvider));
 
-            var inboxQueue = inbox.CreateInboxWithDispatcher<T>(dispatcher);
+            var inboxQueue = inbox.CreateInboxWithDispatcher<T>(dispatcher.Dispatch);
 
             return inboxQueue;
         }

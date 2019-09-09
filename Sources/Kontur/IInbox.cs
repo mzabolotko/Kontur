@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace Kontur
 {
     public interface IInbox
     {
-        Task EmitAsync<T>(IMessage message);
+        Task<bool> EmitAsync<T>(IMessage message);
+
         int GetInboxMessageCount<T>();
-        IMessageBuffer CreateInboxWithDispatcher<T>(MessageDispatcher dispatcher);
+        IMessageBuffer CreateInboxWithDispatcher<T>(Func<IMessage, Task> dispatch);
         IPublishingTag RegisterPublisher<T>(IPublisher publisher, IMessageBuffer inboxQueue);
         bool IsRegistered(IPublishingTag tag);
         void Unregister(IPublishingTag tag);
