@@ -4,7 +4,6 @@ using NUnit.Framework;
 using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -123,7 +122,7 @@ namespace Kontur.Rabbitmq.Tests
             input.Post(new Message<string>("hello", new Dictionary<string, string>(), tasks[1]));
 
             // Assert
-            await tasks[0].Task.ContinueWith(t => 
+            await tasks[0].Task.ContinueWith(t =>
             {
                 t.Status.Should().Be(TaskStatus.Faulted);
             });

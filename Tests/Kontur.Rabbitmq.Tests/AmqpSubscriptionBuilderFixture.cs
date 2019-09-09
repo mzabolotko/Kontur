@@ -1,6 +1,5 @@
 ﻿using FakeItEasy;
 using FluentAssertions;
-using Kontur.Rabbitmq.Tests.Plumbing;
 using NUnit.Framework;
 
 namespace Kontur.Rabbitmq.Tests

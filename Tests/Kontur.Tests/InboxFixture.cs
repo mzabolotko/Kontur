@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -168,11 +167,33 @@ namespace Kontur.Tests
             IMessageBuffer inboxQueue = A.Fake<IMessageBuffer>();
             IPublishingTag publishingTag = A.Fake<IPublishingTag>();
 
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).Returns(publishingTag);
+
             var sut = new Inbox(messageBufferFactory, messageActionFactory, logServiceProvider);
+            sut.RegisterPublisher<string>(publisher, inboxQueue);
 
             sut.Unregister(publishingTag);
 
             A.CallTo(() => publishingTag.Dispose()).MustHaveHappenedOnceExactly();
+        }
+
+        [Test(Description = "Can unregister the unregistered publisher")]
+        public void CanUnregisterUnregisteredPublisher()
+        {
+            IMessageBufferFactory messageBufferFactory = A.Fake<IMessageBufferFactory>();
+            IMessageActionFactory messageActionFactory = A.Fake<IMessageActionFactory>();
+            ILogServiceProvider logServiceProvider = new NUnitLogProvider();
+            IPublisher publisher = A.Fake<IPublisher>();
+            IMessageBuffer inboxQueue = A.Fake<IMessageBuffer>();
+            IPublishingTag publishingTag = A.Fake<IPublishingTag>();
+
+            A.CallTo(() => publisher.LinkTo(A<ITargetBlock<IMessage>>.Ignored)).Returns(publishingTag);
+
+            var sut = new Inbox(messageBufferFactory, messageActionFactory, logServiceProvider);
+
+            sut.Unregister(publishingTag);
+
+            A.CallTo(() => publishingTag.Dispose()).MustNotHaveHappened();
         }
     }
 }

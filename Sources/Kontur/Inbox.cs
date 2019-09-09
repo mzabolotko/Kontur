@@ -85,9 +85,11 @@ namespace Kontur
 
         public void Unregister(IPublishingTag tag)
         {
-            this.logService.Info("Unregistering a publisher.");
-            tag.Dispose();
-            this.publishers.TryRemove(tag.Id, out var publisher);
+            if (this.publishers.TryRemove(tag.Id, out var publisher))
+            {
+                this.logService.Info("Unregistering a publisher.");
+                tag.Dispose();
+            }
         }
 
     }
