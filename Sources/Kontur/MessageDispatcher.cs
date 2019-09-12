@@ -17,10 +17,10 @@ namespace Kontur
         private readonly ILogServiceProvider logServiceProvider;
         private readonly ILogService logService;
 
-        public MessageDispatcher(ILogServiceProvider logServiceProvider = null)
+        public MessageDispatcher(ILogServiceProvider logServiceProvider)
         {
             this.routes = new ConcurrentDictionary<Type, MessageTargetDictionary>();
-            this.logServiceProvider = logServiceProvider ?? new NullLogServiceProvider();
+            this.logServiceProvider = logServiceProvider;
             this.logService = this.logServiceProvider.GetLogServiceOf(typeof(MessageDispatcher));
         }
 
