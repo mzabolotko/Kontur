@@ -11,7 +11,7 @@ using MessageTargetDictionary = System.Collections.Concurrent.ConcurrentDictiona
 namespace Kontur
 {
     /// TODO: change from public to internal
-    public class MessageDispatcher
+    public class MessageDispatcher : IMessageDispatcher
     {
         private readonly ConcurrentDictionary<Type, MessageTargetDictionary> routes;
         private readonly ILogServiceProvider logServiceProvider;
@@ -24,7 +24,7 @@ namespace Kontur
             this.logService = this.logServiceProvider.GetLogServiceOf(typeof(MessageDispatcher));
         }
 
-        internal IDisposable Subscribe<T>(ITargetBlock<IMessage> target)
+        public IDisposable Subscribe<T>(ITargetBlock<IMessage> target)
         {
             this.logService.Debug("Subscribing to {0}.", typeof(T));
             var id = Guid.NewGuid().ToString();

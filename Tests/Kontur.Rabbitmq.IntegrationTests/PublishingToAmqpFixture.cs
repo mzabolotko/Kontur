@@ -14,10 +14,11 @@ namespace Kontur.Rabbitmq.IntegrationTests
             var messageActionFactory = new MessageActionFactory();
             var nlogServiceProvider = new NUnitLogProvider();
             var subscriberFactory = new SubscriberFactory(messageActionFactory, nlogServiceProvider);
+            var messageDispatcherFactory = new MessageDispatcherFactory(nlogServiceProvider);
 
             var inbox = new Inbox(messageBufferFactory, messageActionFactory, nlogServiceProvider);
             var outbox = new Outbox(messageBufferFactory, subscriberFactory, nlogServiceProvider);
-            var exchange = new Exchange(nlogServiceProvider);
+            var exchange = new Exchange(messageDispatcherFactory, nlogServiceProvider);
             var sut = new Bus(inbox, outbox, exchange, nlogServiceProvider);
 
             using (var subsciption = sut.ToRabbitMq(cfg =>

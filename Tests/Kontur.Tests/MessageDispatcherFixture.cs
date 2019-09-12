@@ -10,8 +10,8 @@ namespace Kontur.Tests
     [TestFixture]
     internal class MessageDispatcherFixture
     {
-        [Test]
-        public void GivenDispatcherWhenSubscribingThenCreateSubscriber()
+        [Test(Description = "Can subscribe to the dispatcher")]
+        public void CanSubscribeToDispatcher()
         {
             ITargetBlock<IMessage> target = A.Fake<ITargetBlock<IMessage>>();
 
@@ -22,8 +22,8 @@ namespace Kontur.Tests
             sut.GetCountSubscriberOf(typeof(int)).Should().Be(1);
         }
 
-        [Test]
-        public void GivenDispatcherWhenMulitpleSubscribingWithSameTypeThenCreateMulitpleSubscribers()
+        [Test(Description = "Can subscribe to the dispatcher with the same message type multiple times")]
+        public void CanSubscribeToDispatcherWithSameMessageType()
         {
             ITargetBlock<IMessage> target = A.Fake<ITargetBlock<IMessage>>();
 
@@ -36,8 +36,8 @@ namespace Kontur.Tests
             sut.GetCountSubscriberOf(typeof(int)).Should().Be(3);
         }
 
-        [Test]
-        public void GivenSubscriberThenDisposingRemoveSubscriber()
+        [Test(Description = "Can dispose the subscriber from the dispatcher")]
+        public void CanDisposeSubscriber()
         {
             ITargetBlock<IMessage> target = A.Fake<ITargetBlock<IMessage>>();
 
